@@ -134,11 +134,11 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         public static Func<ItemDrop.ItemData, bool> IsBackpack;
         public static Action<VisEquipment, int, List<GameObject>> ReorderBones;
 
-        internal static void InitBackpackFunc(Func<ItemDrop.ItemData, bool> isValid, Assembly assembly)
+        internal static void InitBackpackFunc(Func<ItemDrop.ItemData, bool> isValid)
         {
             IsBackpack = isValid;
 
-            MethodInfo reorderBones = AccessTools.Method(assembly.GetType("Vapok.Common.Tools.BoneReorder"), "ReorderBones");
+            MethodInfo reorderBones = AccessTools.Method(AdventureBackpacksSlot.assembly.GetType("Vapok.Common.Tools.BoneReorder"), "ReorderBones");
             if (reorderBones != null)
                 ReorderBones = (VisEquipment visEq, int hash, List<GameObject> gameObjects) => reorderBones.Invoke(null, new object[] { visEq, hash, gameObjects });
             else
@@ -403,7 +403,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
     public static class AdventureBackpackItem
     {
-        internal static ItemDrop.ItemData.ItemType GetItemType()
+        public static ItemDrop.ItemData.ItemType GetItemType()
         {
             if (!AdventureBackpacksSlot.IsActive)
                 return ItemDrop.ItemData.ItemType.Shoulder;
@@ -411,7 +411,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             return ItemDrop.ItemData.ItemType.Misc;
         }
 
-        internal static void PatchBackpackItemData(ItemDrop.ItemData itemData)
+        public static void PatchBackpackItemData(ItemDrop.ItemData itemData)
         {
             if (itemData == null)
                 return;
@@ -420,7 +420,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             itemData.m_shared.m_attachOverride = GetItemType();
         }
 
-        internal static void PatchInventory(Inventory inventory)
+        public static void PatchInventory(Inventory inventory)
         {
             if (!AdventureBackpacksSlot.IsActive)
                 return;
@@ -432,13 +432,13 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                 PatchBackpackItemData(item);
         }
 
-        internal static void PatchBackpackItemOnConfigChange()
+        public static void PatchBackpackItemOnConfigChange()
         {
             UpdateBackpacksItemType();
             PatchInventory(Player.m_localPlayer?.GetInventory());
         }
 
-        internal static void UpdateBackpacksItemType()
+        public static void UpdateBackpacksItemType()
         {
             if (!AdventureBackpacksSlot.IsActive)
                 return;

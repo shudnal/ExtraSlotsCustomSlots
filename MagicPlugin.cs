@@ -81,16 +81,18 @@ namespace ExtraSlotsCustomSlots
     {
         public static MethodBase target;
 
-        public static bool Prepare()
+        public static bool Prepare(MethodBase original)
         {
             if (!Chainloader.PluginInfos.TryGetValue(MagicPluginTomeSlot.pluginID, out PluginInfo plugin))
                 return false;
 
-            target = AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("MagicPlugin.Functions.MagicSlot"), "AddCustomSlot");
+            target ??= AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("MagicPlugin.Functions.MagicSlot"), "AddCustomSlot");
             if (target == null)
                 return false;
 
-            LogInfo("MagicPlugin.Functions.MagicSlot:AddCustomSlot method will be patched to prevent adding custom slot call");
+            if (original == null)
+                LogInfo("MagicPlugin.Functions.MagicSlot:AddCustomSlot method is patched to prevent adding custom slot call");
+
             return true;
         }
 
@@ -104,16 +106,18 @@ namespace ExtraSlotsCustomSlots
     {
         public static MethodBase target;
 
-        public static bool Prepare()
+        public static bool Prepare(MethodBase original)
         {
             if (!Chainloader.PluginInfos.TryGetValue(MagicPluginTomeSlot.pluginID, out PluginInfo plugin))
                 return false;
 
-            target = AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("AzuExtendedPlayerInventory.API"), "IsLoaded");
+            target ??= AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("AzuExtendedPlayerInventory.API"), "IsLoaded");
             if (target == null)
                 return false;
 
-            LogInfo("MagicPlugin.AzuExtendedPlayerInventory.API:IsLoaded method will be patched to enable custom slot handling");
+            if (original == null)
+                LogInfo("MagicPlugin.AzuExtendedPlayerInventory.API:IsLoaded method is patched to enable custom slot handling");
+
             return true;
         }
 
