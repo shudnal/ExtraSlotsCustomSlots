@@ -5,12 +5,12 @@ using static ExtraSlotsCustomSlots.ExtraSlotsCustomSlots;
 
 namespace ExtraSlotsCustomSlots
 {
-    public class BackpacksSlot : CustomSlot
+    public class HipLanternSlot : CustomSlot
     {
-        public const string ID = "Backpacks";
-        public const string pluginID = "org.bepinex.plugins.backpacks";
+        public const string ID = "HipLantern";
+        public const string pluginID = "shudnal.HipLantern";
 
-        public BackpacksSlot()
+        public HipLanternSlot()
         {
             slots.Add(this);
 
@@ -21,10 +21,10 @@ namespace ExtraSlotsCustomSlots
 
             Assembly assembly = Assembly.GetAssembly(Chainloader.PluginInfos[pluginID].Instance.GetType());
 
-            MethodInfo isValid = AccessTools.Method(assembly.GetType("Backpacks.Backpacks"), "validateBackpack");
+            MethodInfo isValid = AccessTools.Method(assembly.GetType("HipLantern.LanternItem"), "IsLanternItem", new System.Type[] { typeof(ItemDrop.ItemData) });
             if (isValid == null)
             {
-                LogWarning("Backpacks mod is loaded but Backpacks.Backpacks:validateBackpack is not found");
+                LogWarning("HipLantern mod is loaded but HipLantern.LanternItem:IsLanternItem is not found");
                 return;
             }
 
@@ -32,9 +32,9 @@ namespace ExtraSlotsCustomSlots
 
             itemIsValid = (ItemDrop.ItemData item) => item != null && (bool)isValid.Invoke(null, new[] { item });
 
-            getName = () => backpacksSlotName.Value;
+            getName = () => hipLanternSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(backpacksSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(backpacksSlotItemDiscovered.Value);
+            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(hipLanternSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(hipLanternSlotItemDiscovered.Value);
 
             initialized = true;
         }

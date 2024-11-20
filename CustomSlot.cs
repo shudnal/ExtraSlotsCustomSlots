@@ -8,7 +8,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string slotPrefix = "ESCS";
 
-        
+
         public string GUID;
 
         public bool PluginInstalled => Chainloader.PluginInfos.ContainsKey(GUID);
@@ -23,19 +23,17 @@ namespace ExtraSlotsCustomSlots
 
         public Func<bool> isActive;
 
-        public string afterSlot;
+        public bool AddSlot() => initialized && ExtraSlots.API.AddSlot(GetSlotID(slotID), getName, itemIsValid, isActive);
 
-        public void AddSlot() => ExtraSlots.API.AddSlotAfter(GetSlotID(slotID), getName, itemIsValid, isActive, afterSlot);
-
-        public void RemoveSlot() => ExtraSlots.API.RemoveSlot(GetSlotID(slotID));
+        public bool RemoveSlot() => initialized && (ExtraSlots.API.RemoveSlot(GetSlotID(slotID)) || ExtraSlots.API.RemoveSlot(slotID));
 
 
         public static string GetSlotID(string slotID) => slotPrefix + slotID.ToString();
 
-        public override string ToString() => slotID + (initialized ? "" : " (inactive)");
+        public override string ToString() => initialized ? slotID.ToString() : $"{GUID} (inactive)";
 
         public static readonly List<CustomSlot> slots = new List<CustomSlot>();
 
-        public static readonly string VanillaOrder = $"{BackpacksSlot.ID},{AdventureBackpacksSlot.ID}";
+        public static readonly string VanillaOrder = $"{BackpacksSlot.ID},{AdventureBackpacksSlot.ID},{CircletExtendedSlot.ID},{JewelcraftingNeckSlot.ID},{MagicPluginEarringSlot.ID},{JewelcraftingRingSlot.ID},{MagicPluginTomeSlot.ID},{BowsBeforeHoesSlot.ID},{HipLanternSlot.ID}";
     }
 }
