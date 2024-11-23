@@ -1,3 +1,6 @@
+# 1.0.2
+* AdventureBackpack double equip issue fix
+
 # 1.0.1
 * AdventureBackpack opening fixed
 * AdventureBackpack compatibility with EpicLoot

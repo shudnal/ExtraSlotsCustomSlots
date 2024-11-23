@@ -420,9 +420,9 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             itemData.m_shared.m_attachOverride = GetItemType();
         }
 
-        public static void PatchInventory(Inventory inventory)
+        public static void PatchInventory(Inventory inventory, bool force = false)
         {
-            if (!AdventureBackpacksSlot.IsActive)
+            if (!AdventureBackpacksSlot.IsActive && !force)
                 return;
 
             if (inventory == null)
@@ -434,13 +434,13 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
         public static void PatchBackpackItemOnConfigChange()
         {
-            UpdateBackpacksItemType();
-            PatchInventory(Player.m_localPlayer?.GetInventory());
+            UpdateBackpacksItemType(force: true);
+            PatchInventory(Player.m_localPlayer?.GetInventory(), force: true);
         }
 
-        public static void UpdateBackpacksItemType()
+        public static void UpdateBackpacksItemType(bool force = false)
         {
-            if (!AdventureBackpacksSlot.IsActive)
+            if (!AdventureBackpacksSlot.IsActive && !force)
                 return;
 
             if (!ObjectDB.instance)

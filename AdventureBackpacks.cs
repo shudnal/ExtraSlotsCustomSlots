@@ -137,7 +137,7 @@ namespace ExtraSlotsCustomSlots
 
             public static void Postfix(Player player, ItemDrop.ItemData __state)
             {
-                if (__state == null)
+                if (!AdventureBackpacksSlot.IsActive)
                     return;
 
                 player.m_shoulderItem = __state;

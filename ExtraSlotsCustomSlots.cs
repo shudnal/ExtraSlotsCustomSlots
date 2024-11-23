@@ -20,7 +20,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.1";
+        public const string pluginVersion = "1.0.2";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -110,7 +110,7 @@ namespace ExtraSlotsCustomSlots
             adventureBackpackSlotGlobalKey = config("Mod - Adventure Backpacks", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             adventureBackpackSlotItemDiscovered = config("Mod - Adventure Backpacks", "Items discovered", "$vapok_mod_item_backpack_meadows,$vapok_mod_item_backpack_blackforest,$vapok_mod_item_backpack_swamp,$vapok_mod_item_backpack_mountains,$vapok_mod_item_backpack_plains,$vapok_mod_item_backpack_mistlands,$vapok_mod_item_rugged_backpack,$vapok_mod_item_arctic_backpack", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
-            adventureBackpackSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+            adventureBackpackSlotEnabled.SettingChanged += (s, e) => { AdventureBackpacksCustomSlot.AdventureBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
 
             backpacksSlotEnabled = config("Mod - Backpacks", "Enabled", true, "Enable backpack slot");
             backpacksSlotName = config("Mod - Backpacks", "Name", "$bp_backpack_slot_name", "Slot name");
