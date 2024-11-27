@@ -20,7 +20,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.2";
+        public const string pluginVersion = "1.0.3";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -124,7 +124,7 @@ namespace ExtraSlotsCustomSlots
             bbhQuiverSlotGlobalKey = config("Mod - BowsBeforeHoes", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             bbhQuiverSlotItemDiscovered = config("Mod - BowsBeforeHoes", "Items discovered", "$item_quiver_blackforest,$item_quiver_seeker,$item_quiver_leather,$item_quiver_odinplus,$item_quiver_plainslox", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
-            bbhQuiverSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+            bbhQuiverSlotEnabled.SettingChanged += (s, e) => { UpdateSlots(); BowsBeforeHoesCompat.PatchBackpackItemOnConfigChange(); };
 
             circletExtendedSlotEnabled = config("Mod - CircletExtended", "Enabled", true, "Enable circlet slot");
             circletExtendedSlotName = config("Mod - CircletExtended", "Name", "Circlet", "Slot name");

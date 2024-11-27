@@ -1,3 +1,6 @@
+# 1.0.3
+* fixed BowsBeforeHoes quiver unequipping cape
+
 # 1.0.2
 * AdventureBackpack double equip issue fix
 
