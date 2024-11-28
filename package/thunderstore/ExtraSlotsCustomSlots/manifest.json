@@ -1,6 +1,6 @@
 {
   "name": "ExtraSlotsCustomSlots",
-  "version_number": "1.0.3",
+  "version_number": "1.0.4",
   "website_url": "https://github.com/shudnal/ExtraSlotsCustomSlots",
   "description": "Custom slots for various mod that supports custom items.",
   "dependencies": [

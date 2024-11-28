@@ -1,3 +1,6 @@
+# 1.0.4
+* fixed AdventureBackpack slot making some other items "equippable"
+
 # 1.0.3
 * fixed BowsBeforeHoes quiver unequipping cape
 

@@ -233,7 +233,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                 if (!AdventureBackpacksSlot.IsActive)
                     return;
 
-                __result = __result || __instance.m_shared.m_itemType == AdventureBackpackItem.GetItemType();
+                __result = __result || __instance.m_shared.m_itemType == AdventureBackpackItem.GetItemType() && IsBackpack(__instance);
             }
         }
 
