@@ -34,6 +34,6 @@ namespace ExtraSlotsCustomSlots
 
         public static readonly List<CustomSlot> slots = new List<CustomSlot>();
 
-        public static readonly string VanillaOrder = $"{BackpacksSlot.ID},{AdventureBackpacksSlot.ID},{CircletExtendedSlot.ID},{JewelcraftingNeckSlot.ID},{MagicPluginEarringSlot.ID},{JewelcraftingRingSlot.ID},{MagicPluginTomeSlot.ID},{BowsBeforeHoesSlot.ID},{HipLanternSlot.ID}";
+        public static readonly string VanillaOrder = $"{BackpacksSlot.ID},{AdventureBackpacksSlot.ID},{JudesEquipmentBackpackSlot.ID},{CircletExtendedSlot.ID},{JewelcraftingNeckSlot.ID},{MagicPluginEarringSlot.ID},{JewelcraftingRingSlot.ID},{MagicPluginTomeSlot.ID},{BowsBeforeHoesSlot.ID},{HipLanternSlot.ID}";
     }
 }

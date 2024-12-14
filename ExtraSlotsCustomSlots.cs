@@ -15,12 +15,13 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(MagicPluginEarringSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(CircletExtendedSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(HipLanternSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(JudesEquipmentBackpackSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class ExtraSlotsCustomSlots : BaseUnityPlugin
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.4";
+        public const string pluginVersion = "1.0.5";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -76,6 +77,11 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> magicPluginEarringSlotName;
         public static ConfigEntry<string> magicPluginEarringSlotGlobalKey;
         public static ConfigEntry<string> magicPluginEarringSlotItemDiscovered;
+
+        public static ConfigEntry<bool> judesEquipmentBackpackSlotEnabled;
+        public static ConfigEntry<string> judesEquipmentBackpackSlotName;
+        public static ConfigEntry<string> judesEquipmentBackpackSlotGlobalKey;
+        public static ConfigEntry<string> judesEquipmentBackpackSlotItemDiscovered;
 
         private void Awake()
         {
@@ -167,6 +173,13 @@ namespace ExtraSlotsCustomSlots
             magicPluginEarringSlotItemDiscovered = config("Mod - Magic Plugin - Earring", "Items discovered", "$bmp_dvergr_earring,$bmp_fireresist_earring,$bmp_frostresist_earring,$bmp_poisonresist_earring,$bmp_eitr_earring", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             magicPluginEarringSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+
+            judesEquipmentBackpackSlotEnabled = config("Mod - Judes Equipment", "Enabled", true, "Enable Judes Equipment backpack slot. Restart the game after change to avoid potential issues.");
+            judesEquipmentBackpackSlotName = config("Mod - Judes Equipment", "Name", "Backpack", "Slot name");
+            judesEquipmentBackpackSlotGlobalKey = config("Mod - Judes Equipment", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
+            judesEquipmentBackpackSlotItemDiscovered = config("Mod - Judes Equipment", "Items discovered", "$BackpackSimple,$BackpackHeavy", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+
+            judesEquipmentBackpackSlotEnabled.SettingChanged += (s, e) => { JudesEquipmentBackpacksCustomSlot.JudesEquipmentBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
         }
 
         public static void UpdateSlots()
@@ -208,6 +221,9 @@ namespace ExtraSlotsCustomSlots
                     break;
                 case AdventureBackpacksSlot.ID when adventureBackpackSlotEnabled.Value:
                     new AdventureBackpacksSlot();
+                    break;
+                case JudesEquipmentBackpackSlot.ID when judesEquipmentBackpackSlotEnabled.Value:
+                    new JudesEquipmentBackpackSlot();
                     break;
                 case MagicPluginTomeSlot.ID when magicPluginTomeSlotEnabled.Value:
                     new MagicPluginTomeSlot();

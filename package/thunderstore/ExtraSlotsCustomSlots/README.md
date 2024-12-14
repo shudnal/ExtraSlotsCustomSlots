@@ -12,10 +12,11 @@ This mod can add custom slot for:
 * [BowsBeforeHoes](https://thunderstore.io/c/valheim/p/Azumatt/BowsBeforeHoes/) (Quiver slot)
 * [CircletExtended](https://thunderstore.io/c/valheim/p/shudnal/CircletExtended/) (Circlet slot)
 * [HipLantern](https://thunderstore.io/c/valheim/p/shudnal/HipLantern/) (Lantern slot)
+* [Judes Equipment](https://thunderstore.io/c/valheim/p/GoldenJude/Judes_Equipment/) (Backpack slot)
 
 You can change slots order in the game as you wish.
 
-You can rename and enable/disable slots in the game. Restart is recommended only after toggling AdventureBackpacks slot.
+You can rename and enable/disable slots in the game. Restart is recommended only after toggling AdventureBackpacks and JudesEquipment slots.
 
 "Slot progression" feature from ExtraSlots is supported and default settings is obtaining items related to particular mod. It means you will have Backpack slot the moment you first obtain you backpack.
 

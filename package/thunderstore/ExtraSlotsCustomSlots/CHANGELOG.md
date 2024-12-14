@@ -1,3 +1,6 @@
+# 1.0.5
+* JudesEquipment backpacks slot
+
 # 1.0.4
 * fixed AdventureBackpack slot making some other items "equippable"
 
