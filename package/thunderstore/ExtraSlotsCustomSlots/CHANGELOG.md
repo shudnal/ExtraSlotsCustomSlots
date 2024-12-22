@@ -1,3 +1,6 @@
+# 1.0.6
+* fixed rare occasional warning when AdventureBackpack is installed with slot disabled
+
 # 1.0.5
 * JudesEquipment backpacks slot
 

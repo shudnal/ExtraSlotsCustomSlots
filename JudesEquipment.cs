@@ -100,18 +100,8 @@ namespace ExtraSlotsCustomSlots
                 return list;
             }
 
-            public static bool Prepare()
-            {
-                if (!JudesEquipmentBackpackSlot.IsLoaded || !Chainloader.PluginInfos.ContainsKey(epicLootGUID))
-                    return false;
-
-                targets ??= GetTargets();
-                if (targets.Count == 0)
-                    return false;
-
-                return true;
-            }
-
+            public static bool Prepare() => JudesEquipmentBackpackSlot.IsLoaded && Chainloader.PluginInfos.ContainsKey(epicLootGUID) && (targets ??= GetTargets()).Count > 0;
+            
             private static IEnumerable<MethodBase> TargetMethods() => targets;
 
             public static void Prefix(ItemDrop.ItemData item, ref bool __state)
@@ -168,17 +158,7 @@ namespace ExtraSlotsCustomSlots
                 return list;
             }
 
-            public static bool Prepare()
-            {
-                if (!JudesEquipmentBackpackSlot.IsLoaded || !Chainloader.PluginInfos.ContainsKey(epicLootGUID))
-                    return false;
-
-                targets ??= GetTargets();
-                if (targets.Count == 0)
-                    return false;
-
-                return true;
-            }
+            public static bool Prepare() => JudesEquipmentBackpackSlot.IsLoaded && Chainloader.PluginInfos.ContainsKey(epicLootGUID) && (targets ??= GetTargets()).Count > 0;
 
             private static IEnumerable<MethodBase> TargetMethods() => targets;
 

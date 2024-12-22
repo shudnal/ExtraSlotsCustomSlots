@@ -84,6 +84,9 @@ namespace ExtraSlotsCustomSlots
             {
                 List<MethodBase> list = new List<MethodBase>();
 
+                if (AdventureBackpacksSlot.assembly == null)
+                    return list;
+
                 if (AccessTools.Method(AdventureBackpacksSlot.assembly.GetType("AdventureBackpacks.Extensions.PlayerExtensions"), "IsBackpackEquipped") is MethodInfo method0)
                 {
                     LogInfo("AdventureBackpacks.Extensions.PlayerExtensions:IsBackpackEquipped method is patched to make it work with custom slot");
@@ -111,17 +114,7 @@ namespace ExtraSlotsCustomSlots
                 return list;
             }
 
-            public static bool Prepare()
-            {
-                if (!AdventureBackpacksSlot.IsLoaded)
-                    return false;
-
-                targets ??= GetTargets();
-                if (targets.Count == 0)
-                    return false;
-
-                return true;
-            }
+            public static bool Prepare() => AdventureBackpacksSlot.IsLoaded && (targets ??= GetTargets()).Count > 0;
 
             private static IEnumerable<MethodBase> TargetMethods() => targets;
 
@@ -232,17 +225,7 @@ namespace ExtraSlotsCustomSlots
                     return list;
                 }
 
-                public static bool Prepare()
-                {
-                    if (!AdventureBackpacksSlot.IsLoaded || !Chainloader.PluginInfos.ContainsKey(epicLootGUID))
-                        return false;
-
-                    targets ??= GetTargets();
-                    if (targets.Count == 0)
-                        return false;
-
-                    return true;
-                }
+                public static bool Prepare() => AdventureBackpacksSlot.IsLoaded && Chainloader.PluginInfos.ContainsKey(epicLootGUID) && (targets ??= GetTargets()).Count > 0;
 
                 private static IEnumerable<MethodBase> TargetMethods() => targets;
 
@@ -300,17 +283,7 @@ namespace ExtraSlotsCustomSlots
                     return list;
                 }
 
-                public static bool Prepare()
-                {
-                    if (!AdventureBackpacksSlot.IsLoaded || !Chainloader.PluginInfos.ContainsKey(epicLootGUID))
-                        return false;
-
-                    targets ??= GetTargets();
-                    if (targets.Count == 0)
-                        return false;
-
-                    return true;
-                }
+                public static bool Prepare() => AdventureBackpacksSlot.IsLoaded && Chainloader.PluginInfos.ContainsKey(epicLootGUID) && (targets ??= GetTargets()).Count > 0;
 
                 private static IEnumerable<MethodBase> TargetMethods() => targets;
 
