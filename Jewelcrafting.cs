@@ -34,7 +34,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => jewelcraftingNeckSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(jewelcraftingNeckSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(jewelcraftingNeckSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(jewelcraftingNeckSlotGlobalKey.Value, jewelcraftingNeckSlotItemDiscovered.Value);
 
             initialized = true;
         }
@@ -69,7 +69,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => jewelcraftingRingSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(jewelcraftingRingSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(jewelcraftingRingSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(jewelcraftingRingSlotGlobalKey.Value, jewelcraftingRingSlotItemDiscovered.Value);
 
             initialized = true;
         }

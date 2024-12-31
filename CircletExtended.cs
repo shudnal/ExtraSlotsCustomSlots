@@ -34,7 +34,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => circletExtendedSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(circletExtendedSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(circletExtendedSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(circletExtendedSlotGlobalKey.Value, circletExtendedSlotItemDiscovered.Value);
 
             initialized = true;
         }

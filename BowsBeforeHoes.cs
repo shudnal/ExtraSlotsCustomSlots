@@ -43,7 +43,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => bbhQuiverSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(bbhQuiverSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(bbhQuiverSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(bbhQuiverSlotGlobalKey.Value, bbhQuiverSlotItemDiscovered.Value);
 
             initialized = true;
 

@@ -33,7 +33,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => judesEquipmentBackpackSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(judesEquipmentBackpackSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(judesEquipmentBackpackSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(judesEquipmentBackpackSlotGlobalKey.Value, judesEquipmentBackpackSlotItemDiscovered.Value);
 
             initialized = true;
 

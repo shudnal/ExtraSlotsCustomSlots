@@ -41,7 +41,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => adventureBackpackSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(adventureBackpackSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(adventureBackpackSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(adventureBackpackSlotGlobalKey.Value, adventureBackpackSlotItemDiscovered.Value);
 
             initialized = true;
 

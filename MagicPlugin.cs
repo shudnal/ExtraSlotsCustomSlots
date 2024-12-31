@@ -35,7 +35,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => magicPluginTomeSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(magicPluginTomeSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(magicPluginTomeSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(magicPluginTomeSlotGlobalKey.Value, magicPluginTomeSlotItemDiscovered.Value);
 
             initialized = true;
         }
@@ -70,7 +70,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => magicPluginEarringSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(magicPluginEarringSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(magicPluginEarringSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(magicPluginEarringSlotGlobalKey.Value, magicPluginEarringSlotItemDiscovered.Value);
 
             initialized = true;
         }

@@ -34,7 +34,7 @@ namespace ExtraSlotsCustomSlots
 
             getName = () => hipLanternSlotName.Value;
 
-            isActive = () => ExtraSlots.API.IsAnyGlobalKeyActive(hipLanternSlotGlobalKey.Value) || ExtraSlots.API.IsAnyMaterialDiscovered(hipLanternSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(hipLanternSlotGlobalKey.Value, hipLanternSlotItemDiscovered.Value);
 
             initialized = true;
         }
