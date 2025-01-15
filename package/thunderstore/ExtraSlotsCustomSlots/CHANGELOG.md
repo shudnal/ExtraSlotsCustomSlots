@@ -1,3 +1,6 @@
+# 1.0.8
+* CircletExtended slot will only be available after circlet upgrade to lvl2
+
 # 1.0.7
 * changed the logic of checking slots activity. If only one of the values ​​(global key or discovered item) is specified - checking for the unfilled one will not be performed
 

@@ -28,13 +28,15 @@ namespace ExtraSlotsCustomSlots
                 return;
             }
 
+            MethodInfo isCircletSlotKnown = AccessTools.Method(assembly.GetType("CircletExtended.CircletItem"), "IsCircletSlotKnown");
+
             slotID = ID;
 
             itemIsValid = (ItemDrop.ItemData item) => item != null && (bool)isValid.Invoke(null, new[] { item });
 
             getName = () => circletExtendedSlotName.Value;
 
-            isActive = () => IsSlotActive(circletExtendedSlotGlobalKey.Value, circletExtendedSlotItemDiscovered.Value);
+            isActive = () => IsSlotActive(circletExtendedSlotGlobalKey.Value, circletExtendedSlotItemDiscovered.Value) && (isCircletSlotKnown == null || (bool)isCircletSlotKnown.Invoke(null, null));
 
             initialized = true;
         }
