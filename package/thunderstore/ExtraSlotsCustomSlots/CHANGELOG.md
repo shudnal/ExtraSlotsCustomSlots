@@ -1,3 +1,7 @@
+# 1.0.9
+* patch 0.220.3
+* ServerSync updated
+
 # 1.0.8
 * CircletExtended slot will only be available after circlet upgrade to lvl2
 
