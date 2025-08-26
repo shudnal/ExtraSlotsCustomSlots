@@ -18,7 +18,6 @@ namespace ExtraSlotsCustomSlots
         {
             /// <summary>
             /// Custom setting editor (OnGUI code that replaces the default editor provided by ConfigurationManager).
-            /// See below for a deeper explanation. Using a custom drawer will cause many of the other fields to do nothing.
             /// </summary>
             [UsedImplicitly]
             public System.Action<BepInEx.Configuration.ConfigEntryBase>? CustomDrawer;
@@ -49,7 +48,7 @@ namespace ExtraSlotsCustomSlots
             Type? configManagerType = bepinexConfigManager?.GetType("ConfigurationManager.ConfigurationManager");
             configManager = configManagerType == null ? null : BepInEx.Bootstrap.Chainloader.ManagerObject.GetComponent(configManagerType);
 
-            configManagerStyles = bepinexConfigManager?.GetType("ConfigurationManager.ConfigurationManagerStyles");
+            configManagerStyles = bepinexConfigManager?.GetType("ConfigurationManager.ConfigurationManagerStyles") ?? bepinexConfigManager?.GetType("ConfigurationManager.Utilities.ImguiUtils");
         }
 
         internal static Action<ConfigEntryBase> DrawSeparatedStrings(string splitString)
@@ -71,7 +70,7 @@ namespace ExtraSlotsCustomSlots
 
                     string val = strings[i];
 
-                    string newVal = GUILayout.TextField(val, GetStyle(GUI.skin.textArea), GUILayout.ExpandWidth(true));
+                    string newVal = GUILayout.TextField(val, GetStyle(GUI.skin.textField), GUILayout.ExpandWidth(true));
 
                     if (newVal != val && !locked)
                         wasUpdated = true;
@@ -115,7 +114,7 @@ namespace ExtraSlotsCustomSlots
 
                     string val = strings[i];
 
-                    GUILayout.Label(val, GetStyle(GUI.skin.textArea), GUILayout.ExpandWidth(true));
+                    GUILayout.Label(val, GetStyle(GUI.skin.textField), GUILayout.ExpandWidth(true));
 
                     if (GUILayout.Button("ʌ", new GUIStyle(GetStyle(GUI.skin.button)) { fixedWidth = 21 }) && !locked)
                     {

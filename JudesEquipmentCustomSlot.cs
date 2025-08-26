@@ -133,12 +133,6 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         internal static void InitBackpackFunc(Func<ItemDrop.ItemData, bool> isValid)
         {
             IsBackpack = isValid;
-
-            /*MethodInfo reorderBones = AccessTools.Method(JudesEquipmentBackpackSlot.assembly.GetType("Vapok.Common.Tools.BoneReorder"), "ReorderBones");
-            if (reorderBones != null)
-                ReorderBones = (VisEquipment visEq, int hash, List<GameObject> gameObjects) => reorderBones.Invoke(null, new object[] { visEq, hash, gameObjects });
-            else
-                LogWarning("JudesEquipmentBackpacks mod is loaded but Vapok.Common.Tools:ReorderBones is not found");*/
         }
 
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]

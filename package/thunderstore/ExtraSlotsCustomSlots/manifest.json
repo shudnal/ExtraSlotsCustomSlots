@@ -4,7 +4,7 @@
   "website_url": "https://github.com/shudnal/ExtraSlotsCustomSlots",
   "description": "Custom slots for various mods that support custom items.",
   "dependencies": [
-    "denikson-BepInExPack_Valheim-5.4.2202",
+    "denikson-BepInExPack_Valheim-5.4.2332",
     "shudnal-ExtraSlots-1.0.28"
   ]
 }

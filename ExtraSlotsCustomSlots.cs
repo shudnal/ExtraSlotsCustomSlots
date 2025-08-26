@@ -16,6 +16,7 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(CircletExtendedSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(HipLanternSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(JudesEquipmentBackpackSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(AdventureBackpacksPatches.EpicLootCompat.epicLootGUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class ExtraSlotsCustomSlots : BaseUnityPlugin
     {

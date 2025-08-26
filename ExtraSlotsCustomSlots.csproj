@@ -92,7 +92,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Libs\ExtraSlots.dll" />
-    <Content Include="Libs\ServerSync.dll" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ILRepack.targets" />
