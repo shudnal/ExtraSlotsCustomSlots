@@ -13,6 +13,7 @@ This mod can add custom slot for:
 * [CircletExtended](https://thunderstore.io/c/valheim/p/shudnal/CircletExtended/) (Circlet slot)
 * [HipLantern](https://thunderstore.io/c/valheim/p/shudnal/HipLantern/) (Lantern slot)
 * [Judes Equipment](https://thunderstore.io/c/valheim/p/GoldenJude/Judes_Equipment/) (Backpack slot)
+* [Rusty Bags](https://thunderstore.io/c/valheim/p/RustyMods/RustyBags/) (Bag slot)
 
 You can change slots order in the game as you wish.
 

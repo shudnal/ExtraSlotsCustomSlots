@@ -17,12 +17,13 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(HipLanternSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(JudesEquipmentBackpackSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(AdventureBackpacksPatches.EpicLootCompat.epicLootGUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(RustyBagsSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class ExtraSlotsCustomSlots : BaseUnityPlugin
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.9";
+        public const string pluginVersion = "1.0.10";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -83,6 +84,11 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> judesEquipmentBackpackSlotName;
         public static ConfigEntry<string> judesEquipmentBackpackSlotGlobalKey;
         public static ConfigEntry<string> judesEquipmentBackpackSlotItemDiscovered;
+
+        public static ConfigEntry<bool> rustyBagsSlotEnabled;
+        public static ConfigEntry<string> rustyBagsSlotName;
+        public static ConfigEntry<string> rustyBagsSlotGlobalKey;
+        public static ConfigEntry<string> rustyBagsSlotItemDiscovered;
 
         private void Awake()
         {
@@ -181,6 +187,13 @@ namespace ExtraSlotsCustomSlots
             judesEquipmentBackpackSlotItemDiscovered = config("Mod - Judes Equipment", "Items discovered", "$BackpackSimple,$BackpackHeavy", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             judesEquipmentBackpackSlotEnabled.SettingChanged += (s, e) => { JudesEquipmentBackpacksCustomSlot.JudesEquipmentBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
+
+            rustyBagsSlotEnabled = config("Mod - Rusty Bags", "Enabled", true, "Enable Rusty Bags backpack slot.");
+            rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name");
+            rustyBagsSlotGlobalKey = config("Mod - Rusty Bags", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
+            rustyBagsSlotItemDiscovered = config("Mod - Rusty Bags", "Items discovered", "$item_BarrelBag_RS,$item_CrossbowQuiver_RS,$item_DvergerBag_RS,$item_LeatherBag_RS,$item_MountainQuiver_RS,$item_Quiver_RS,$item_UnbjornBag_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+
+            rustyBagsSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
         }
 
         public static void UpdateSlots()
@@ -225,6 +238,9 @@ namespace ExtraSlotsCustomSlots
                     break;
                 case JudesEquipmentBackpackSlot.ID when judesEquipmentBackpackSlotEnabled.Value:
                     new JudesEquipmentBackpackSlot();
+                    break;
+                case RustyBagsSlot.ID when rustyBagsSlotEnabled.Value:
+                    new RustyBagsSlot();
                     break;
                 case MagicPluginTomeSlot.ID when magicPluginTomeSlotEnabled.Value:
                     new MagicPluginTomeSlot();

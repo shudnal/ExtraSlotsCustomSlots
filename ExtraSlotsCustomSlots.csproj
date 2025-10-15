@@ -45,6 +45,7 @@
     <Compile Include="CustomConfigs.cs" />
     <Compile Include="CustomSlot.cs" />
     <Compile Include="ExtraSlotsCustomSlots.cs" />
+    <Compile Include="RustyBags.cs" />
     <Compile Include="MagicPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
