@@ -1,3 +1,6 @@
+# 1.0.11
+* 8 used defined custom slots. You can create your own custom slots for any item(s). Use ExtraSlots translation files to add localized slot names.
+
 # 1.0.10
 * RustyBags slot
 

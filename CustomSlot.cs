@@ -33,7 +33,30 @@ namespace ExtraSlotsCustomSlots
 
         public static readonly List<CustomSlot> slots = new List<CustomSlot>();
 
-        public static readonly string VanillaOrder = $"{BackpacksSlot.ID},{AdventureBackpacksSlot.ID},{JudesEquipmentBackpackSlot.ID},{RustyBagsSlot.ID},{CircletExtendedSlot.ID},{JewelcraftingNeckSlot.ID},{MagicPluginEarringSlot.ID},{JewelcraftingRingSlot.ID},{MagicPluginTomeSlot.ID},{BowsBeforeHoesSlot.ID},{HipLanternSlot.ID}";
+        public static readonly string VanillaOrder = string.Join(",", GetVanillaOrder());
+
+        public static List<string> GetVanillaOrder()
+        {
+            List<string> slotOrder = new List<string>
+            {
+                BackpacksSlot.ID,
+                AdventureBackpacksSlot.ID,
+                JudesEquipmentBackpackSlot.ID,
+                RustyBagsSlot.ID,
+                CircletExtendedSlot.ID,
+                JewelcraftingNeckSlot.ID,
+                MagicPluginEarringSlot.ID,
+                JewelcraftingRingSlot.ID,
+                MagicPluginTomeSlot.ID,
+                BowsBeforeHoesSlot.ID,
+                HipLanternSlot.ID
+            };
+
+            for (int i = 0; i < UserDefinedSlot.maxAmount; i++)
+                slotOrder.Add(UserDefinedSlot.GetSlotID(i));
+
+            return slotOrder;
+        }
 
         public static bool IsSlotActive(string globalKey, string itemDiscovered)
         {

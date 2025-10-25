@@ -15,6 +15,7 @@ namespace ExtraSlotsCustomSlots
             slots.Add(this);
 
             GUID = pluginID;
+            slotID = ID;
 
             if (!PluginInstalled)
                 return;
@@ -30,9 +31,7 @@ namespace ExtraSlotsCustomSlots
 
             MethodInfo isCircletSlotKnown = AccessTools.Method(assembly.GetType("CircletExtended.CircletItem"), "IsCircletSlotKnown");
 
-            slotID = ID;
-
-            itemIsValid = (ItemDrop.ItemData item) => item != null && (bool)isValid.Invoke(null, new[] { item });
+            itemIsValid = item => item != null && (bool)isValid.Invoke(null, new[] { item });
 
             getName = () => circletExtendedSlotName.Value;
 

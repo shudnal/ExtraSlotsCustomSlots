@@ -140,7 +140,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
             MethodInfo reorderBones = AccessTools.Method(AdventureBackpacksSlot.assembly.GetType("Vapok.Common.Tools.BoneReorder"), "ReorderBones");
             if (reorderBones != null)
-                ReorderBones = (VisEquipment visEq, int hash, List<GameObject> gameObjects) => reorderBones.Invoke(null, new object[] { visEq, hash, gameObjects });
+                ReorderBones = (visEq, hash, gameObjects) => reorderBones.Invoke(null, new object[] { visEq, hash, gameObjects });
             else
                 LogWarning("AdventureBackpacks mod is loaded but Vapok.Common.Tools:ReorderBones is not found");
         }

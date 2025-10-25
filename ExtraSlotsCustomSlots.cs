@@ -23,7 +23,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.10";
+        public const string pluginVersion = "1.0.11";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -119,7 +119,7 @@ namespace ExtraSlotsCustomSlots
             slotsOrder.SettingChanged += (s, e) => UpdateSlots();
 
             adventureBackpackSlotEnabled = config("Mod - Adventure Backpacks", "Enabled", true, "Enable adventure backpack slot. Restart the game after change to avoid potential issues.");
-            adventureBackpackSlotName = config("Mod - Adventure Backpacks", "Name", "Backpack", "Slot name");
+            adventureBackpackSlotName = config("Mod - Adventure Backpacks", "Name", "Backpack", "Slot name. Use ExtraSlots translation files to add localized string.");
             adventureBackpackSlotGlobalKey = config("Mod - Adventure Backpacks", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             adventureBackpackSlotItemDiscovered = config("Mod - Adventure Backpacks", "Items discovered", "$vapok_mod_item_backpack_meadows,$vapok_mod_item_backpack_blackforest,$vapok_mod_item_backpack_swamp,$vapok_mod_item_backpack_mountains,$vapok_mod_item_backpack_plains,$vapok_mod_item_backpack_mistlands,$vapok_mod_item_rugged_backpack,$vapok_mod_item_arctic_backpack", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
@@ -140,28 +140,28 @@ namespace ExtraSlotsCustomSlots
             bbhQuiverSlotEnabled.SettingChanged += (s, e) => { UpdateSlots(); BowsBeforeHoesCompat.PatchBackpackItemOnConfigChange(); };
 
             circletExtendedSlotEnabled = config("Mod - CircletExtended", "Enabled", true, "Enable circlet slot");
-            circletExtendedSlotName = config("Mod - CircletExtended", "Name", "Circlet", "Slot name");
+            circletExtendedSlotName = config("Mod - CircletExtended", "Name", "Circlet", "Slot name. Use ExtraSlots translation files to add localized string.");
             circletExtendedSlotGlobalKey = config("Mod - CircletExtended", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             circletExtendedSlotItemDiscovered = config("Mod - CircletExtended", "Items discovered", "$item_helmet_dverger", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             circletExtendedSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             hipLanternSlotEnabled = config("Mod - HipLantern", "Enabled", true, "Enable hip lantern slot");
-            hipLanternSlotName = config("Mod - HipLantern", "Name", "Lantern", "Slot name");
+            hipLanternSlotName = config("Mod - HipLantern", "Name", "Lantern", "Slot name. Use ExtraSlots translation files to add localized string.");
             hipLanternSlotGlobalKey = config("Mod - HipLantern", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             hipLanternSlotItemDiscovered = config("Mod - HipLantern", "Items discovered", "$item_hiplantern", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             hipLanternSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             jewelcraftingNeckSlotEnabled = config("Mod - Jewelcrafting - Neck", "Enabled", true, "Enable neck slot");
-            jewelcraftingNeckSlotName = config("Mod - Jewelcrafting - Neck", "Name", "Neck", "Slot name");
+            jewelcraftingNeckSlotName = config("Mod - Jewelcrafting - Neck", "Name", "Neck", "Slot name. Use ExtraSlots translation files to add localized string.");
             jewelcraftingNeckSlotGlobalKey = config("Mod - Jewelcrafting - Neck", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             jewelcraftingNeckSlotItemDiscovered = config("Mod - Jewelcrafting - Neck", "Items discovered", "$jc_necklace_red,$jc_necklace_green,$jc_necklace_blue,$jc_necklace_yellow,$jc_necklace_purple,$jc_necklace_orange,$jc_necklace_dvergrnecklace,$jc_necklace_eitrnecklace,$jc_necklace_fireresistnecklace,$jc_necklace_frostresistnecklace,$jc_necklace_poisonresistnecklace,", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             jewelcraftingNeckSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             jewelcraftingRingSlotEnabled = config("Mod - Jewelcrafting - Ring", "Enabled", true, "Enable Ring slot");
-            jewelcraftingRingSlotName = config("Mod - Jewelcrafting - Ring", "Name", "Finger", "Slot name");
+            jewelcraftingRingSlotName = config("Mod - Jewelcrafting - Ring", "Name", "Finger", "Slot name. Use ExtraSlots translation files to add localized string.");
             jewelcraftingRingSlotGlobalKey = config("Mod - Jewelcrafting - Ring", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             jewelcraftingRingSlotItemDiscovered = config("Mod - Jewelcrafting - Ring", "Items discovered", "$jc_ring_purple,$jc_ring_green,$jc_ring_red,$jc_ring_blue,$jc_ring_black,$jc_ring_dvergrring,$jc_ring_eitrring,$jc_ring_fireresistring,$jc_ring_frostresistring,$jc_ring_poisonresistring", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
@@ -182,18 +182,21 @@ namespace ExtraSlotsCustomSlots
             magicPluginEarringSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             judesEquipmentBackpackSlotEnabled = config("Mod - Judes Equipment", "Enabled", true, "Enable Judes Equipment backpack slot. Restart the game after change to avoid potential issues.");
-            judesEquipmentBackpackSlotName = config("Mod - Judes Equipment", "Name", "Backpack", "Slot name");
+            judesEquipmentBackpackSlotName = config("Mod - Judes Equipment", "Name", "Backpack", "Slot name. Use ExtraSlots translation files to add localized string.");
             judesEquipmentBackpackSlotGlobalKey = config("Mod - Judes Equipment", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             judesEquipmentBackpackSlotItemDiscovered = config("Mod - Judes Equipment", "Items discovered", "$BackpackSimple,$BackpackHeavy", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             judesEquipmentBackpackSlotEnabled.SettingChanged += (s, e) => { JudesEquipmentBackpacksCustomSlot.JudesEquipmentBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
 
             rustyBagsSlotEnabled = config("Mod - Rusty Bags", "Enabled", true, "Enable Rusty Bags backpack slot.");
-            rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name");
+            rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name. Use ExtraSlots translation files to add localized string.");
             rustyBagsSlotGlobalKey = config("Mod - Rusty Bags", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             rustyBagsSlotItemDiscovered = config("Mod - Rusty Bags", "Items discovered", "$item_BarrelBag_RS,$item_CrossbowQuiver_RS,$item_DvergerBag_RS,$item_LeatherBag_RS,$item_MountainQuiver_RS,$item_Quiver_RS,$item_UnbjornBag_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
             rustyBagsSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+
+            for (int i = 0; i < UserDefinedSlot.maxAmount; i++)
+                new UserDefinedSlot(i);
         }
 
         public static void UpdateSlots()
@@ -207,7 +210,7 @@ namespace ExtraSlotsCustomSlots
             slotsOrder.Value.Split(',').Select(s => s.Trim()).Where(s => !s.IsNullOrWhiteSpace()).Do(InitSlot);
 
             List<string> vanillaSlots = CustomSlot.VanillaOrder.Split(',').ToList();
-            
+
             CustomSlot.slots.Do(slot => vanillaSlots.Remove(slot.slotID));
 
             vanillaSlots.Do(InitSlot);
@@ -226,45 +229,48 @@ namespace ExtraSlotsCustomSlots
                 LogWarning($"Error while trying to add new slot {slot}.");
         }
 
-        public static void InitSlot(string slot)
+        public static void InitSlot(string slotID)
         {
-            switch (slot)
+            switch (slotID)
             {
                 case BackpacksSlot.ID when backpacksSlotEnabled.Value:
                     new BackpacksSlot();
-                    break;
+                    return;
                 case AdventureBackpacksSlot.ID when adventureBackpackSlotEnabled.Value:
                     new AdventureBackpacksSlot();
-                    break;
+                    return;
                 case JudesEquipmentBackpackSlot.ID when judesEquipmentBackpackSlotEnabled.Value:
                     new JudesEquipmentBackpackSlot();
-                    break;
+                    return;
                 case RustyBagsSlot.ID when rustyBagsSlotEnabled.Value:
                     new RustyBagsSlot();
-                    break;
+                    return;
                 case MagicPluginTomeSlot.ID when magicPluginTomeSlotEnabled.Value:
                     new MagicPluginTomeSlot();
-                    break;
+                    return;
                 case MagicPluginEarringSlot.ID when magicPluginEarringSlotEnabled.Value:
                     new MagicPluginEarringSlot();
-                    break;
+                    return;
                 case JewelcraftingNeckSlot.ID when jewelcraftingNeckSlotEnabled.Value:
                     new JewelcraftingNeckSlot();
-                    break;
+                    return;
                 case JewelcraftingRingSlot.ID when jewelcraftingRingSlotEnabled.Value:
                     new JewelcraftingRingSlot();
-                    break;
+                    return;
                 case BowsBeforeHoesSlot.ID when bbhQuiverSlotEnabled.Value:
                     new BowsBeforeHoesSlot();
-                    break;
+                    return;
                 case CircletExtendedSlot.ID when circletExtendedSlotEnabled.Value:
                     new CircletExtendedSlot();
-                    break;
+                    return;
                 case HipLanternSlot.ID when hipLanternSlotEnabled.Value:
                     new HipLanternSlot();
-                    break;
+                    return;
                 default: break;
             }
+
+            if (UserDefinedSlot.IsUserDefinedSlot(slotID))
+                UserDefinedSlot.UpdateSlot(slotID);
         }
 
         public static void LogInfo(object data)
@@ -283,7 +289,7 @@ namespace ExtraSlotsCustomSlots
             instance.Logger.LogWarning(data);
         }
 
-        ConfigEntry<T> config<T>(string group, string name, T defaultValue, ConfigDescription description, bool synchronizedSetting = true)
+        internal ConfigEntry<T> config<T>(string group, string name, T defaultValue, ConfigDescription description, bool synchronizedSetting = true)
         {
             ConfigEntry<T> configEntry = Config.Bind(group, name, defaultValue, description);
 
@@ -293,6 +299,6 @@ namespace ExtraSlotsCustomSlots
             return configEntry;
         }
 
-        ConfigEntry<T> config<T>(string group, string name, T defaultValue, string description, bool synchronizedSetting = true) => config(group, name, defaultValue, new ConfigDescription(description), synchronizedSetting);
+        internal ConfigEntry<T> config<T>(string group, string name, T defaultValue, string description, bool synchronizedSetting = true) => config(group, name, defaultValue, new ConfigDescription(description), synchronizedSetting);
     }
 }

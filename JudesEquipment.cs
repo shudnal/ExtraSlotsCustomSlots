@@ -21,15 +21,14 @@ namespace ExtraSlotsCustomSlots
             slots.Add(this);
 
             GUID = pluginID;
+            slotID = ID;
 
             if (!PluginInstalled)
                 return;
 
             assembly = Assembly.GetAssembly(Chainloader.PluginInfos[pluginID].Instance.GetType());
 
-            slotID = ID;
-
-            itemIsValid = (ItemDrop.ItemData item) => item != null && item.m_dropPrefab != null && (item.m_dropPrefab.name == "BackpackSimple" || item.m_dropPrefab.name == "BackpackHeavy");
+            itemIsValid = item => item != null && item.m_dropPrefab != null && (item.m_dropPrefab.name == "BackpackSimple" || item.m_dropPrefab.name == "BackpackHeavy");
 
             getName = () => judesEquipmentBackpackSlotName.Value;
 

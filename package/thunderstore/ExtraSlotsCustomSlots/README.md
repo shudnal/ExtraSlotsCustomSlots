@@ -14,12 +14,15 @@ This mod can add custom slot for:
 * [HipLantern](https://thunderstore.io/c/valheim/p/shudnal/HipLantern/) (Lantern slot)
 * [Judes Equipment](https://thunderstore.io/c/valheim/p/GoldenJude/Judes_Equipment/) (Backpack slot)
 * [Rusty Bags](https://thunderstore.io/c/valheim/p/RustyMods/RustyBags/) (Bag slot)
+* up to 8 user defined custom slots where you can set any item(s) to be placed in dedicated slot
 
 You can change slots order in the game as you wish.
 
 You can rename and enable/disable slots in the game. Restart is recommended only after toggling AdventureBackpacks and JudesEquipment slots.
 
 "Slot progression" feature from ExtraSlots is supported and default settings is obtaining items related to particular mod. It means you will have Backpack slot the moment you first obtain you backpack.
+
+You can use ExtraSlots translation files to add your own strings for custom slot names.
 
 ## Installation (manual)
 extract ExtraSlotsCustomSlots.dll into your BepInEx\Plugins\ folder

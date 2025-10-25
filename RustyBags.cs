@@ -17,6 +17,7 @@ namespace ExtraSlotsCustomSlots
             slots.Add(this);
 
             GUID = pluginID;
+            slotID = ID;
 
             if (!PluginInstalled)
                 return;
@@ -29,8 +30,6 @@ namespace ExtraSlotsCustomSlots
                 LogWarning("RustyBags mod is loaded but RustyBags.Bag type is not found");
                 return;
             }
-
-            slotID = ID;
 
             itemIsValid = item => item != null && bag.IsInstanceOfType(item);
 
