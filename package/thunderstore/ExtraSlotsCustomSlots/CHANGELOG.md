@@ -1,3 +1,6 @@
+# 1.0.12
+* items in user defined custom slots are visible on player now
+
 # 1.0.11
 * 8 used defined custom slots. You can create your own custom slots for any item(s). Use ExtraSlots translation files to add localized slot names.
 

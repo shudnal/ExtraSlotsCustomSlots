@@ -13,6 +13,7 @@ namespace ExtraSlotsCustomSlots
         public ConfigEntry<string> slotName;
         public ConfigEntry<string> slotGlobalKey;
         public ConfigEntry<string> slotItemList;
+        public ConfigEntry<bool> itemIsVisible;
 
         public string groupName;
         public List<string> itemList = new List<string>();
@@ -37,9 +38,11 @@ namespace ExtraSlotsCustomSlots
             slotName = instance.config(groupName, "Name", "Slot", "Slot name. Use ExtraSlots translation files to add localized string.");
             slotGlobalKey = instance.config(groupName, "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             slotItemList = instance.config(groupName, "Item list", "", "Comma-separated list of items. Slot will be active only if any item is discovered.");
+            itemIsVisible = instance.config(groupName, "Item is visible", true, "Make item in that slot visible on player model (if supported by an item itself).");
 
             slotEnabled.SettingChanged += (sender, args) => UpdateSlots();
             slotItemList.SettingChanged += (sender, args) => UpdateItemList();
+            itemIsVisible.SettingChanged += (sender, args) => Player.m_localPlayer?.SetupEquipment();
 
             UpdateItemList();
 
@@ -67,5 +70,7 @@ namespace ExtraSlotsCustomSlots
         public static bool IsUserDefinedSlot(string slotID) => slotID.StartsWith(UserDefinedSlotID);
 
         public static string GetSlotID(int index) => $"{UserDefinedSlotID}{index + 1}";
+
+        public static bool IsItemInSlotVisible(int index) => userDefinedSlots[index] is UserDefinedSlot slot && slot.slotEnabled.Value && slot.itemIsVisible.Value;
     }
 }
