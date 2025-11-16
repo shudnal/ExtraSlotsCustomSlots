@@ -23,7 +23,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.12";
+        public const string pluginVersion = "1.0.13";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 

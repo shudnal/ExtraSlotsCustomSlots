@@ -1,3 +1,6 @@
+# 1.0.13
+* fixed rare issue when item loses its durability and breaks in custom slot
+
 # 1.0.12
 * items in user defined custom slots are visible on player now
 

@@ -255,6 +255,8 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
             return tempItems;
         }
 
+        public static ItemDrop.ItemData[] GetEquippedItemsArray() => GetEquippedItems().ToArray();
+
         public static int GetCustomItemIndex(ItemDrop.ItemData item)
         {
             if (item == null)
@@ -281,7 +283,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
 
                     tempEffects.Clear();
 
-                    foreach (ItemDrop.ItemData item in GetEquippedItems().ToArray())
+                    foreach (ItemDrop.ItemData item in GetEquippedItemsArray())
                     {
                         if ((bool)item.m_shared.m_equipStatusEffect)
                             tempEffects.Add(item.m_shared.m_equipStatusEffect);
@@ -403,7 +405,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    GetEquippedItems().ToArray().Do(item => __instance.UnequipItem(item, triggerEquipEffects: false));
+                    GetEquippedItemsArray().Do(item => __instance.UnequipItem(item, triggerEquipEffects: false));
                 }
             }
 
@@ -461,7 +463,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    GetEquippedItems().DoIf(item => item.m_shared.m_useDurability, item => __instance.DrainEquipedItemDurability(item, dt));
+                    GetEquippedItemsArray().DoIf(item => item.m_shared.m_useDurability, item => __instance.DrainEquipedItemDurability(item, dt));
                 }
             }
 
