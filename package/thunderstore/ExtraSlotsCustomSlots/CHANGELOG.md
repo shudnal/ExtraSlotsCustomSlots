@@ -1,3 +1,6 @@
+# 1.0.14
+* Vikings Summoner grimoire slot
+
 # 1.0.13
 * fixed rare issue when item loses its durability and breaks in custom slot
 

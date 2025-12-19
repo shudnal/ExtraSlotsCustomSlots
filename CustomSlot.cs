@@ -48,6 +48,7 @@ namespace ExtraSlotsCustomSlots
                 MagicPluginEarringSlot.ID,
                 JewelcraftingRingSlot.ID,
                 MagicPluginTomeSlot.ID,
+                VikingsSummoner.ID,
                 BowsBeforeHoesSlot.ID,
                 HipLanternSlot.ID
             };

@@ -18,12 +18,13 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(JudesEquipmentBackpackSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(AdventureBackpacksPatches.EpicLootCompat.epicLootGUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(RustyBagsSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(VikingsSummoner.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class ExtraSlotsCustomSlots : BaseUnityPlugin
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.13";
+        public const string pluginVersion = "1.0.14";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -89,6 +90,12 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> rustyBagsSlotName;
         public static ConfigEntry<string> rustyBagsSlotGlobalKey;
         public static ConfigEntry<string> rustyBagsSlotItemDiscovered;
+        
+        public static ConfigEntry<bool> vikingsSummonerSlotEnabled;
+        public static ConfigEntry<string> vikingsSummonerSlotName;
+        public static ConfigEntry<string> vikingsSummonerSlotGlobalKey;
+        public static ConfigEntry<string> vikingsSummonerSlotItemDiscovered;
+
 
         private void Awake()
         {
@@ -195,6 +202,13 @@ namespace ExtraSlotsCustomSlots
 
             rustyBagsSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
+            vikingsSummonerSlotEnabled = config("Mod - Vikings Summoner", "Enabled", true, "Enable Vikings Summoner grimoire slot.");
+            vikingsSummonerSlotName = config("Mod - Vikings Summoner", "Name", "Grimoire", "Slot name. Use ExtraSlots translation files to add localized string.");
+            vikingsSummonerSlotGlobalKey = config("Mod - Vikings Summoner", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
+            vikingsSummonerSlotItemDiscovered = config("Mod - Vikings Summoner", "Items discovered", "RD_grimoire_01,RD_grimoire_02,RD_grimoire_03", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+
+            vikingsSummonerSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+
             for (int i = 0; i < UserDefinedSlot.maxAmount; i++)
                 new UserDefinedSlot(i);
         }
@@ -265,6 +279,9 @@ namespace ExtraSlotsCustomSlots
                     return;
                 case HipLanternSlot.ID when hipLanternSlotEnabled.Value:
                     new HipLanternSlot();
+                    return;
+                case VikingsSummoner.ID when vikingsSummonerSlotEnabled.Value:
+                    new VikingsSummoner();
                     return;
                 default: break;
             }
