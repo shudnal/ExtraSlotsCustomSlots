@@ -23,10 +23,10 @@ namespace ExtraSlotsCustomSlots
 
             Assembly assembly = Assembly.GetAssembly(Chainloader.PluginInfos[pluginID].Instance.GetType());
 
-            MethodInfo isValid = AccessTools.Method(assembly.GetType("Vikings_Summoner.GrimoireCustomSlotManager"), "IsCustomSlotItemForSlot");
+            MethodInfo isValid = AccessTools.Method(assembly.GetType("Vikings_Summoner.TomeCustomSlotManager"), "IsTomeItem");
             if (isValid == null)
             {
-                LogWarning("Vikings_Summoner mod is loaded but Vikings_Summoner.GrimoireCustomSlotManager:IsCustomSlotItemForSlot is not found");
+                LogWarning("Vikings_Summoner mod is loaded but Vikings_Summoner.TomeCustomSlotManager:IsTomeItem is not found");
                 return;
             }
 
@@ -49,12 +49,12 @@ namespace ExtraSlotsCustomSlots
                 if (!Chainloader.PluginInfos.TryGetValue(pluginID, out PluginInfo plugin))
                     return false;
 
-                target ??= AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("Vikings_Summoner.GrimoireCustomSlotManager"), "IsSlotSystemEnabled");
+                target ??= AccessTools.Method(Assembly.GetAssembly(plugin.Instance.GetType()).GetType("Vikings_Summoner.TomeCustomSlotManager"), "IsSlotSystemEnabled");
                 if (target == null)
                     return false;
 
                 if (original == null)
-                    LogInfo("Vikings_Summoner.GrimoireCustomSlotManager:IsSlotSystemEnabled method is patched to enable internal custom slot logic");
+                    LogInfo("Vikings_Summoner.TomeCustomSlotManager:IsSlotSystemEnabled method is patched to enable internal custom slot logic");
 
                 return true;
             }

@@ -1,3 +1,6 @@
+# 1.0.15
+* Vikings Summoner grimoire slot fixed
+
 # 1.0.14
 * Vikings Summoner grimoire slot
 
