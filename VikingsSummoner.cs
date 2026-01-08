@@ -30,7 +30,7 @@ namespace ExtraSlotsCustomSlots
                 return;
             }
 
-            itemIsValid = item => item != null && (bool)isValid.Invoke(null, new object[] { item, "" });
+            itemIsValid = item => item != null && (bool)isValid.Invoke(null, new object[] { item });
 
             getName = () => vikingsSummonerSlotName.Value;
 
