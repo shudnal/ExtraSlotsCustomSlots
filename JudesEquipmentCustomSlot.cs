@@ -403,7 +403,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
 
         public static void PatchBackpackItemData(ItemDrop.ItemData itemData)
         {
-            if (itemData == null)
+            if (itemData?.m_shared == null)
                 return;
 
             itemData.m_shared.m_itemType = GetItemType();
@@ -433,12 +433,24 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
             if (!JudesEquipmentBackpackSlot.IsActive && !force)
                 return;
 
-            if (!ObjectDB.instance)
+            if (!ObjectDB.instance || ObjectDB.instance.m_items == null)
+                return;
+
+            if (CustomItemType.IsBackpack == null)
                 return;
 
             foreach (GameObject item in ObjectDB.instance.m_items)
-                if (item != null && item.GetComponent<ItemDrop>()?.m_itemData is ItemDrop.ItemData itemData && CustomItemType.IsBackpack(itemData))
+            {
+                if (item == null)
+                    continue;
+
+                ItemDrop.ItemData itemData = item.GetComponent<ItemDrop>()?.m_itemData;
+                if (itemData?.m_shared == null)
+                    continue;
+
+                if (CustomItemType.IsBackpack(itemData))
                     PatchBackpackItemData(itemData);
+            }
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.AddKnownItem))]

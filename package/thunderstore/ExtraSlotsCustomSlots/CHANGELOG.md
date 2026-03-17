@@ -1,3 +1,6 @@
+# 1.0.17
+* fixed occasional bug with JudesEquipment config sync
+
 # 1.0.16
 * Vikings Summoner grimoire slot fixed once again
 
