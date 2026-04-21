@@ -24,7 +24,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.17";
+        public const string pluginVersion = "1.0.18";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -90,7 +90,13 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> rustyBagsSlotName;
         public static ConfigEntry<string> rustyBagsSlotGlobalKey;
         public static ConfigEntry<string> rustyBagsSlotItemDiscovered;
-        
+        public static ConfigEntry<bool> rustyBagsSlotCombineWithQuiver;
+
+        public static ConfigEntry<bool> rustyBagsQuiverSlotEnabled;
+        public static ConfigEntry<string> rustyBagsQuiverSlotName;
+        public static ConfigEntry<string> rustyBagsQuiverSlotGlobalKey;
+        public static ConfigEntry<string> rustyBagsQuiverSlotItemDiscovered;
+
         public static ConfigEntry<bool> vikingsSummonerSlotEnabled;
         public static ConfigEntry<string> vikingsSummonerSlotName;
         public static ConfigEntry<string> vikingsSummonerSlotGlobalKey;
@@ -198,9 +204,17 @@ namespace ExtraSlotsCustomSlots
             rustyBagsSlotEnabled = config("Mod - Rusty Bags", "Enabled", true, "Enable Rusty Bags backpack slot.");
             rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name. Use ExtraSlots translation files to add localized string.");
             rustyBagsSlotGlobalKey = config("Mod - Rusty Bags", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
-            rustyBagsSlotItemDiscovered = config("Mod - Rusty Bags", "Items discovered", "$item_BarrelBag_RS,$item_CrossbowQuiver_RS,$item_DvergerBag_RS,$item_LeatherBag_RS,$item_MountainQuiver_RS,$item_Quiver_RS,$item_UnbjornBag_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+            rustyBagsSlotItemDiscovered = config("Mod - Rusty Bags", "Items discovered", "LeatherBag_RS,BarrelBag_RS,MinerBag_RS,UnbjornBag_RS,DvergerBag_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+            rustyBagsSlotCombineWithQuiver = config("Mod - Rusty Bags", "Allow quivers", false, "By default quivers will not go into this slos. Enable to allow quivers. Do not forget to add quivers from quiver slot item list.");
 
             rustyBagsSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+
+            rustyBagsQuiverSlotEnabled = config("Mod - Rusty Bags - Quiver", "Enabled", true, "Enable Rusty Bags backpack slot.");
+            rustyBagsQuiverSlotName = config("Mod - Rusty Bags - Quiver", "Name", "Quiver", "Slot name. Use ExtraSlots translation files to add localized string.");
+            rustyBagsQuiverSlotGlobalKey = config("Mod - Rusty Bags - Quiver", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
+            rustyBagsQuiverSlotItemDiscovered = config("Mod - Rusty Bags - Quiver", "Items discovered", "Quiver_RS,MountainQuiver_RS,CrossbowQuiver_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+
+            rustyBagsQuiverSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             vikingsSummonerSlotEnabled = config("Mod - Vikings Summoner", "Enabled", true, "Enable Vikings Summoner grimoire slot.");
             vikingsSummonerSlotName = config("Mod - Vikings Summoner", "Name", "Grimoire", "Slot name. Use ExtraSlots translation files to add localized string.");
@@ -258,6 +272,9 @@ namespace ExtraSlotsCustomSlots
                     return;
                 case RustyBagsSlot.ID when rustyBagsSlotEnabled.Value:
                     new RustyBagsSlot();
+                    return;
+                case RustyBagsQuiverSlot.ID when rustyBagsQuiverSlotEnabled.Value:
+                    new RustyBagsQuiverSlot();
                     return;
                 case MagicPluginTomeSlot.ID when magicPluginTomeSlotEnabled.Value:
                     new MagicPluginTomeSlot();

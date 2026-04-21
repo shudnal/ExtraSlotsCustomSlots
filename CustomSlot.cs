@@ -43,6 +43,7 @@ namespace ExtraSlotsCustomSlots
                 AdventureBackpacksSlot.ID,
                 JudesEquipmentBackpackSlot.ID,
                 RustyBagsSlot.ID,
+                RustyBagsQuiverSlot.ID,
                 CircletExtendedSlot.ID,
                 JewelcraftingNeckSlot.ID,
                 MagicPluginEarringSlot.ID,

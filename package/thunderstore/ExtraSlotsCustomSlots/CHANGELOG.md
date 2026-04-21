@@ -1,3 +1,6 @@
+# 1.0.18
+* added Quiver slot for RustyBags
+
 # 1.0.17
 * fixed occasional bug with JudesEquipment config sync
 
