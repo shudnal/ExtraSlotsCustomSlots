@@ -24,7 +24,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.18";
+        public const string pluginVersion = "1.0.19";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -40,6 +40,7 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> adventureBackpackSlotName;
         public static ConfigEntry<string> adventureBackpackSlotGlobalKey;
         public static ConfigEntry<string> adventureBackpackSlotItemDiscovered;
+        public static ConfigEntry<bool> adventureBackpackItemIsVisible;
 
         public static ConfigEntry<bool> backpacksSlotEnabled;
         public static ConfigEntry<string> backpacksSlotName;
@@ -85,6 +86,7 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<string> judesEquipmentBackpackSlotName;
         public static ConfigEntry<string> judesEquipmentBackpackSlotGlobalKey;
         public static ConfigEntry<string> judesEquipmentBackpackSlotItemDiscovered;
+        public static ConfigEntry<bool> judesEquipmentBackpackItemIsVisible;
 
         public static ConfigEntry<bool> rustyBagsSlotEnabled;
         public static ConfigEntry<string> rustyBagsSlotName;
@@ -135,8 +137,10 @@ namespace ExtraSlotsCustomSlots
             adventureBackpackSlotName = config("Mod - Adventure Backpacks", "Name", "Backpack", "Slot name. Use ExtraSlots translation files to add localized string.");
             adventureBackpackSlotGlobalKey = config("Mod - Adventure Backpacks", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             adventureBackpackSlotItemDiscovered = config("Mod - Adventure Backpacks", "Items discovered", "$vapok_mod_item_backpack_meadows,$vapok_mod_item_backpack_blackforest,$vapok_mod_item_backpack_swamp,$vapok_mod_item_backpack_mountains,$vapok_mod_item_backpack_plains,$vapok_mod_item_backpack_mistlands,$vapok_mod_item_rugged_backpack,$vapok_mod_item_arctic_backpack", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+            adventureBackpackItemIsVisible = config("Mod - Adventure Backpacks", "Item is visible", true, "Make the equipped backpack visible on the player model.");
 
             adventureBackpackSlotEnabled.SettingChanged += (s, e) => { AdventureBackpacksCustomSlot.AdventureBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
+            adventureBackpackItemIsVisible.SettingChanged += (s, e) => Player.m_localPlayer?.SetupEquipment();
 
             backpacksSlotEnabled = config("Mod - Backpacks", "Enabled", true, "Enable backpack slot");
             backpacksSlotName = config("Mod - Backpacks", "Name", "$bp_backpack_slot_name", "Slot name");
@@ -160,7 +164,7 @@ namespace ExtraSlotsCustomSlots
             circletExtendedSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
 
             hipLanternSlotEnabled = config("Mod - HipLantern", "Enabled", true, "Enable hip lantern slot");
-            hipLanternSlotName = config("Mod - HipLantern", "Name", "Lantern", "Slot name. Use ExtraSlots translation files to add localized string.");
+            hipLanternSlotName = config("Mod - HipLantern", "Name", "$hiplantern_slot", "Slot name. Use ExtraSlots translation files to add localized string.");
             hipLanternSlotGlobalKey = config("Mod - HipLantern", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             hipLanternSlotItemDiscovered = config("Mod - HipLantern", "Items discovered", "$item_hiplantern", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
 
@@ -198,8 +202,10 @@ namespace ExtraSlotsCustomSlots
             judesEquipmentBackpackSlotName = config("Mod - Judes Equipment", "Name", "Backpack", "Slot name. Use ExtraSlots translation files to add localized string.");
             judesEquipmentBackpackSlotGlobalKey = config("Mod - Judes Equipment", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             judesEquipmentBackpackSlotItemDiscovered = config("Mod - Judes Equipment", "Items discovered", "$BackpackSimple,$BackpackHeavy", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
+            judesEquipmentBackpackItemIsVisible = config("Mod - Judes Equipment", "Item is visible", true, "Make the equipped backpack visible on the player model.");
 
             judesEquipmentBackpackSlotEnabled.SettingChanged += (s, e) => { JudesEquipmentBackpacksCustomSlot.JudesEquipmentBackpackItem.PatchBackpackItemOnConfigChange(); UpdateSlots(); };
+            judesEquipmentBackpackItemIsVisible.SettingChanged += (s, e) => Player.m_localPlayer?.SetupEquipment();
 
             rustyBagsSlotEnabled = config("Mod - Rusty Bags", "Enabled", true, "Enable Rusty Bags backpack slot.");
             rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name. Use ExtraSlots translation files to add localized string.");

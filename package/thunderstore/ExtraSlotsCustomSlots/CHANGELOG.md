@@ -1,3 +1,6 @@
+# 1.0.19
+* added an option to hide equipped Adventure Backpacks and Judes Equipment backpacks on the player model
+
 # 1.0.18
 * added Quiver slot for RustyBags
 

@@ -123,7 +123,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
                 ItemDrop.ItemData itemData = __instance.GetAdventureBackpack();
 
-                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null) ? itemData.m_dropPrefab.name : "");
+                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null && adventureBackpackItemIsVisible.Value) ? itemData.m_dropPrefab.name : "");
             }
         }
     }

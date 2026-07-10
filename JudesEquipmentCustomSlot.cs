@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using static ExtraSlotsCustomSlots.ExtraSlotsCustomSlots;
 
 namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
 {
@@ -119,7 +120,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
 
                 ItemDrop.ItemData itemData = __instance.GetJudesEquipmentBackpack();
 
-                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null) ? itemData.m_dropPrefab.name : "");
+                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null && judesEquipmentBackpackItemIsVisible.Value) ? itemData.m_dropPrefab.name : "");
             }
         }
     }
