@@ -1,24 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<Target Name="ILRepacker" AfterTargets="Build">
-		<ItemGroup>
-			<InputAssemblies Include="$(TargetPath)" />
-			<InputAssemblies Include="$(OutputPath)ServerSync.dll" />
-		</ItemGroup>
-		<ILRepack Parallel="true" DebugInfo="true" Internalize="true" InputAssemblies="@(InputAssemblies)" OutputFile="$(TargetPath)" TargetKind="SameAsPrimaryAssembly" LibraryPath="$(OutputPath)" />
-	</Target>
-	<Target Name="CopyDLLPackage" AfterTargets="ILRepacker">
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ProjectDir)package\thunderstore\$(SolutionName)\" />
-		<Message Text="Copied to thunderstore package folder." Importance="High" />
-	</Target>
-	<Target Name="ZipOutputPath" AfterTargets="CopyDLLPackage">
-		<ZipDirectory
-				SourceDirectory="$(ProjectDir)package\thunderstore\$(SolutionName)\"
-				DestinationFile="$(ProjectDir)package\thunderstore\$(SolutionName).zip"
-				Overwrite="true"/>
-	</Target>
-	<Target Name="CopyDLLPlugins" AfterTargets="ILRepacker">
-		<Copy SourceFiles="$(TargetPath)" DestinationFolder="D:\r2modman\Valheim\profiles\beta\BepInEx\plugins\shudnal-$(SolutionName)\" />
-		<Message Text="Copied to r2 folder." Importance="High" />
-	</Target>
+
+  <PropertyGroup>
+    <ModName>ExtraSlotsCustomSlots</ModName>
+  </PropertyGroup>
+
+  <Target Name="InitializeExtraSlotsCustomSlotsPackageProperties">
+    <PropertyGroup>
+      <EffectiveModName Condition="'$(ModName)' != ''">$(ModName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(TargetName)' != ''">$(TargetName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(AssemblyName)' != ''">$(AssemblyName)</EffectiveModName>
+      <EffectiveModName Condition="'$(EffectiveModName)' == '' and '$(MSBuildProjectName)' != ''">$(MSBuildProjectName)</EffectiveModName>
+
+      <ResolvedR2ModManProfilePluginsDir Condition="'$(R2ModManProfilePluginsDir)' != ''">$(R2ModManProfilePluginsDir)</ResolvedR2ModManProfilePluginsDir>
+      <ResolvedR2ModManProfilePluginsDir Condition="'$(ResolvedR2ModManProfilePluginsDir)' == ''">D:\r2modman\Valheim\profiles\beta\BepInEx\plugins\shudnal-$(EffectiveModName)\</ResolvedR2ModManProfilePluginsDir>
+
+      <ThunderstorePackageDir>$(ProjectDir)package\thunderstore\$(EffectiveModName)\</ThunderstorePackageDir>
+      <ThunderstoreZipPath>$(ProjectDir)package\thunderstore\$(EffectiveModName).zip</ThunderstoreZipPath>
+      <ThunderstoreManifestPath>$(ThunderstorePackageDir)manifest.json</ThunderstoreManifestPath>
+    </PropertyGroup>
+
+    <Error Condition="'$(EffectiveModName)' == ''" Text="Mod name was not resolved. Set &lt;ModName&gt;ExtraSlotsCustomSlots&lt;/ModName&gt; in ILRepack.targets." />
+    <Error Condition="'$(ThunderstorePackageDir)' == ''" Text="Thunderstore package directory was not resolved." />
+    <Error Condition="'$(ThunderstoreZipPath)' == ''" Text="Thunderstore ZIP path was not resolved." />
+    <Error Condition="'$(ResolvedR2ModManProfilePluginsDir)' == ''" Text="r2modman profile plugins directory was not resolved." />
+  </Target>
+
+  <Target
+    Name="ReadExtraSlotsCustomSlotsPackageVersion"
+    DependsOnTargets="InitializeExtraSlotsCustomSlotsPackageProperties">
+
+    <Error Condition="!Exists('$(TargetPath)')" Text="Built mod DLL was not found: $(TargetPath)" />
+
+    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+      <Output TaskParameter="Assemblies" ItemName="_ExtraSlotsCustomSlotsPackageAssemblyIdentity" />
+    </GetAssemblyIdentity>
+
+    <PropertyGroup>
+      <PackageVersion>%(_ExtraSlotsCustomSlotsPackageAssemblyIdentity.Version)</PackageVersion>
+    </PropertyGroup>
+
+    <Error Condition="'$(PackageVersion)' == ''" Text="Package version was not resolved from $(TargetPath)." />
+    <Message Text="Detected package version from DLL: $(PackageVersion)" Importance="High" />
+  </Target>
+
+  <Target
+    Name="PrepareExtraSlotsCustomSlotsThunderstorePackage"
+    DependsOnTargets="ReadExtraSlotsCustomSlotsPackageVersion">
+
+    <MakeDir Directories="$(ThunderstorePackageDir)" />
+
+    <Copy
+      SourceFiles="$(TargetPath)"
+      DestinationFolder="$(ThunderstorePackageDir)"
+      OverwriteReadOnlyFiles="true" />
+
+    <Message Text="Thunderstore package directory updated: $(ThunderstorePackageDir)" Importance="High" />
+  </Target>
+
+  <Target
+    Name="UpdateExtraSlotsCustomSlotsThunderstoreManifest"
+    DependsOnTargets="PrepareExtraSlotsCustomSlotsThunderstorePackage">
+
+    <Error Condition="!Exists('$(ProjectDir)UpdateThunderstoreManifest.ps1')" Text="UpdateThunderstoreManifest.ps1 was not found in $(ProjectDir)." />
+    <Error Condition="!Exists('$(ThunderstoreManifestPath)')" Text="Thunderstore manifest was not found: $(ThunderstoreManifestPath)" />
+
+    <Exec
+      WorkingDirectory="$(ProjectDir)"
+      Command="powershell -ExecutionPolicy Bypass -NoProfile -File &quot;$(ProjectDir)UpdateThunderstoreManifest.ps1&quot; -ManifestPath &quot;$(ThunderstoreManifestPath)&quot; -Version &quot;$(PackageVersion)&quot;" />
+  </Target>
+
+  <Target
+    Name="ZipExtraSlotsCustomSlotsThunderstorePackage"
+    DependsOnTargets="UpdateExtraSlotsCustomSlotsThunderstoreManifest">
+
+    <ZipDirectory
+      SourceDirectory="$(ThunderstorePackageDir)"
+      DestinationFile="$(ThunderstoreZipPath)"
+      Overwrite="true" />
+
+    <Message Text="Thunderstore archive created: $(ThunderstoreZipPath)" Importance="High" />
+  </Target>
+
+  <Target
+    Name="CopyExtraSlotsCustomSlotsToR2ModMan"
+    DependsOnTargets="ZipExtraSlotsCustomSlotsThunderstorePackage">
+
+    <MakeDir Directories="$(ResolvedR2ModManProfilePluginsDir)" />
+
+    <Copy
+      SourceFiles="$(TargetPath)"
+      DestinationFolder="$(ResolvedR2ModManProfilePluginsDir)"
+      OverwriteReadOnlyFiles="true" />
+
+    <Message Text="Copied ExtraSlotsCustomSlots.dll to r2modman profile: $(ResolvedR2ModManProfilePluginsDir)" Importance="High" />
+  </Target>
+
+  <Target
+    Name="PublishExtraSlotsCustomSlotsAfterBuild"
+    AfterTargets="Build"
+    Condition="'$(DesignTimeBuild)' != 'true'"
+    DependsOnTargets="CopyExtraSlotsCustomSlotsToR2ModMan" />
+
 </Project>

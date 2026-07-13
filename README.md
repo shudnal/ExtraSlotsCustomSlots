@@ -4,6 +4,14 @@ Custom slots for various mod that supports custom items.
 
 This mod depends on [ExtraSlots](https://thunderstore.io/c/valheim/p/shudnal/ExtraSlots/) mod to work.
 
+## Conditional Config Sync
+* All configuration settings except logging are synchronized from the server by default
+* Server administrators can change the synchronization policy for policy-controlled settings in `BepInEx/config/shudnal.ConditionalConfigSync/ConditionalConfigSync.SyncPolicy.cfg`
+* Prefix an exact setting or whole-section identifier with `+` to force server control or `-` to make it client-controlled. Exact-setting rules take precedence over whole-section rules
+* Slot availability, order, names, progression requirements, accepted item lists, and equipped-item visibility are policy-controlled. `Lock Configuration` always remains server-controlled
+* Use shared modpack configs or distribute your config manually if you also want client-controlled settings to be identical for all players initially
+* If you install this mod manually, also install [ConditionalConfigSync](https://thunderstore.io/c/valheim/p/shudnal/ConditionalConfigSync/)
+
 This mod can add custom slot for:
 * [Backpacks](https://thunderstore.io/c/valheim/p/Smoothbrain/Backpacks/) (Backpack slot)
 * [AdventureBackpacks](https://thunderstore.io/c/valheim/p/Vapok/AdventureBackpacks/) (with option to equip cape and backpack at the same time)

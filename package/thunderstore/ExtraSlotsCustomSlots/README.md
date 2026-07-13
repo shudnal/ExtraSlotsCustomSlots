@@ -24,6 +24,14 @@ You can rename and enable/disable slots in the game. Restart is recommended only
 
 You can use ExtraSlots translation files to add your own strings for custom slot names.
 
+## Conditional Config Sync
+* All configuration settings except logging are synchronized from the server by default
+* Server administrators can change the synchronization policy for policy-controlled settings in `BepInEx/config/shudnal.ConditionalConfigSync/ConditionalConfigSync.SyncPolicy.cfg`
+* Prefix an exact setting or whole-section identifier with `+` to force server control or `-` to make it client-controlled. Exact-setting rules take precedence over whole-section rules
+* Slot availability, order, names, progression requirements, accepted item lists, and equipped-item visibility are policy-controlled. `Lock Configuration` always remains server-controlled
+* Use shared modpack configs or distribute your config manually if you also want client-controlled settings to be identical for all players initially
+* If you install this mod manually, also install [ConditionalConfigSync](https://thunderstore.io/c/valheim/p/shudnal/ConditionalConfigSync/)
+
 ## Installation (manual)
 extract ExtraSlotsCustomSlots.dll into your BepInEx\Plugins\ folder
 

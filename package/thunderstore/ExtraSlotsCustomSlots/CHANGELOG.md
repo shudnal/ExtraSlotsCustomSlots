@@ -1,3 +1,7 @@
+# 1.0.20
+* migrated configuration synchronization from ServerSync to ConditionalConfigSync
+* server administrators can override the ownership of policy-controlled settings through ConditionalConfigSync policy
+
 # 1.0.19
 * added an option to hide equipped Adventure Backpacks and Judes Equipment backpacks on the player model
 

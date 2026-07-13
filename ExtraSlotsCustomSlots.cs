@@ -1,7 +1,7 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using ServerSync;
+using ConditionalConfigSync;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,16 +19,17 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(AdventureBackpacksPatches.EpicLootCompat.epicLootGUID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(RustyBagsSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(VikingsSummoner.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("_shudnal.ConditionalConfigSync", BepInDependency.DependencyFlags.HardDependency)]
     [BepInPlugin(pluginID, pluginName, pluginVersion)]
     public class ExtraSlotsCustomSlots : BaseUnityPlugin
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.19";
+        public const string pluginVersion = "1.0.20";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
-        internal static readonly ConfigSync configSync = new ConfigSync(pluginID) { DisplayName = pluginName, CurrentVersion = pluginVersion, MinimumRequiredVersion = pluginVersion };
+        internal static readonly ConfigSync configSync = new ConfigSync(pluginID) { DisplayName = pluginName, CurrentVersion = pluginVersion, MinimumRequiredVersion = pluginVersion, ModRequired = false };
 
         internal static ExtraSlotsCustomSlots instance;
 
@@ -126,8 +127,8 @@ namespace ExtraSlotsCustomSlots
 
         public void ConfigInit()
         {
-            configLocked = config("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only. ");
-            loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Not synced with Server]", synchronizedSetting: false);
+            configLocked = serverConfig("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
+            loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Client controlled by default]", synchronizedSetting: false);
             slotsOrder = config("General", "Slots order", defaultValue: CustomSlot.VanillaOrder, 
                 new ConfigDescription("Comma-separated slot ID order of custom slots", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawOrderedFixedStrings(",") }));
 
@@ -329,16 +330,36 @@ namespace ExtraSlotsCustomSlots
             instance.Logger.LogWarning(data);
         }
 
+#pragma warning disable IDE1006 // Naming Styles
         internal ConfigEntry<T> config<T>(string group, string name, T defaultValue, ConfigDescription description, bool synchronizedSetting = true)
         {
-            ConfigEntry<T> configEntry = Config.Bind(group, name, defaultValue, description);
-
-            SyncedConfigEntry<T> syncedConfigEntry = configSync.AddConfigEntry(configEntry);
-            syncedConfigEntry.SynchronizedConfig = synchronizedSetting;
-
-            return configEntry;
+            return configSync.AddConfigEntry(
+                Config,
+                group,
+                name,
+                defaultValue,
+                description,
+                syncMode: ConfigSyncMode.Conditional,
+                serverControlledByDefault: synchronizedSetting).SourceConfig;
         }
 
-        internal ConfigEntry<T> config<T>(string group, string name, T defaultValue, string description, bool synchronizedSetting = true) => config(group, name, defaultValue, new ConfigDescription(description), synchronizedSetting);
+        internal ConfigEntry<T> serverConfig<T>(string group, string name, T defaultValue, ConfigDescription description)
+        {
+            return configSync.AddConfigEntry(
+                Config,
+                group,
+                name,
+                defaultValue,
+                description,
+                syncMode: ConfigSyncMode.AlwaysServerControlled,
+                serverControlledByDefault: true).SourceConfig;
+        }
+
+        internal ConfigEntry<T> config<T>(string group, string name, T defaultValue, string description, bool synchronizedSetting = true) =>
+            config(group, name, defaultValue, new ConfigDescription(description), synchronizedSetting);
+
+        internal ConfigEntry<T> serverConfig<T>(string group, string name, T defaultValue, string description) =>
+            serverConfig(group, name, defaultValue, new ConfigDescription(description));
+#pragma warning restore IDE1006 // Naming Styles
     }
 }
