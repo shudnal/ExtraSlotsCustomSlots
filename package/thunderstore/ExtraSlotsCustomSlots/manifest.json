@@ -1,11 +1,11 @@
 {
     "name":  "ExtraSlotsCustomSlots",
-    "version_number":  "1.0.20",
+    "version_number":  "1.0.21",
     "website_url":  "https://github.com/shudnal/ExtraSlotsCustomSlots",
     "description":  "Custom slots for various mods that support custom items.",
     "dependencies":  [
                          "denikson-BepInExPack_Valheim-5.4.2333",
-                         "shudnal-ExtraSlots-1.0.46",
-                         "shudnal-ConditionalConfigSync-1.0.1"
+                         "shudnal-ExtraSlots-1.1.21",
+                         "shudnal-ConditionalConfigSync-1.0.4"
                      ]
 }

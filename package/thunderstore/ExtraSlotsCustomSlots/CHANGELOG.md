@@ -1,3 +1,6 @@
+# 1.0.21
+* fixed compatibility with both legacy Epic Loot versions and Epic Loot 0.13.0 or later for magic effects in custom slots and Shardstones on custom backpacks
+
 # 1.0.20
 * migrated configuration synchronization from ServerSync to ConditionalConfigSync
 * server administrators can override the ownership of policy-controlled settings through ConditionalConfigSync policy

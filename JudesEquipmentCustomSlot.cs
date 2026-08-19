@@ -22,7 +22,16 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
 
         public static ItemDrop.ItemData GetJudesEquipmentBackpack(this Humanoid humanoid) => humanoid.GetBackpackData().backpack;
 
-        public static ItemDrop.ItemData SetJudesEquipmentBackpack(this Humanoid humanoid, ItemDrop.ItemData item) => humanoid.GetBackpackData().backpack = item;
+        public static ItemDrop.ItemData SetJudesEquipmentBackpack(this Humanoid humanoid, ItemDrop.ItemData item)
+        {
+            HumanoidJudesEquipmentBackpack backpackData = humanoid.GetBackpackData();
+            if (backpackData.backpack == item)
+                return item;
+
+            backpackData.backpack = item;
+            global::ExtraSlotsCustomSlots.EpicLootCompatibility.InvalidatePlayerEffectCache(humanoid as Player);
+            return item;
+        }
     }
 
     [Serializable]

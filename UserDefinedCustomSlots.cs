@@ -44,7 +44,8 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
 
         public static ItemDrop.ItemData SetCustomItem(this Humanoid humanoid, int index, ItemDrop.ItemData item)
         {
-            return index switch
+            ItemDrop.ItemData previousItem = humanoid.GetCustomItem(index);
+            ItemDrop.ItemData result = index switch
             {
                 0 => humanoid.GetCustomItemData().customItem1 = item,
                 1 => humanoid.GetCustomItemData().customItem2 = item,
@@ -56,6 +57,11 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                 7 => humanoid.GetCustomItemData().customItem8 = item,
                 _ => null
             };
+
+            if (previousItem != result)
+                global::ExtraSlotsCustomSlots.EpicLootCompatibility.InvalidatePlayerEffectCache(humanoid as Player);
+
+            return result;
         }
     }
 

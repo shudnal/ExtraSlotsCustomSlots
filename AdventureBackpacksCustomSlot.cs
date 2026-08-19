@@ -23,7 +23,16 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
         public static ItemDrop.ItemData GetAdventureBackpack(this Humanoid humanoid) => humanoid.GetBackpackData().backpack;
 
-        public static ItemDrop.ItemData SetAdventureBackpack(this Humanoid humanoid, ItemDrop.ItemData item) => humanoid.GetBackpackData().backpack = item;
+        public static ItemDrop.ItemData SetAdventureBackpack(this Humanoid humanoid, ItemDrop.ItemData item)
+        {
+            HumanoidAdventureBackpack backpackData = humanoid.GetBackpackData();
+            if (backpackData.backpack == item)
+                return item;
+
+            backpackData.backpack = item;
+            global::ExtraSlotsCustomSlots.EpicLootCompatibility.InvalidatePlayerEffectCache(humanoid as Player);
+            return item;
+        }
     }
 
     [Serializable]

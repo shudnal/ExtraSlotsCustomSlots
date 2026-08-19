@@ -16,7 +16,7 @@ namespace ExtraSlotsCustomSlots
     [BepInDependency(CircletExtendedSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(HipLanternSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(JudesEquipmentBackpackSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency(AdventureBackpacksPatches.EpicLootCompat.epicLootGUID, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(EpicLootCompatibility.EpicLootGuid, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(RustyBagsSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(VikingsSummoner.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("_shudnal.ConditionalConfigSync", BepInDependency.DependencyFlags.HardDependency)]
@@ -25,7 +25,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.20";
+        public const string pluginVersion = "1.0.21";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -113,13 +113,16 @@ namespace ExtraSlotsCustomSlots
             ConfigInit();
             _ = configSync.AddLockingConfigEntry(configLocked);
 
+            EpicLootCompatibility.Prepare();
             UpdateSlots();
 
             harmony.PatchAll();
+            EpicLootCompatibility.Initialize();
         }
 
         private void OnDestroy()
         {
+            EpicLootCompatibility.Shutdown();
             Config.Save();
             instance = null;
             harmony?.UnpatchSelf();
@@ -251,6 +254,7 @@ namespace ExtraSlotsCustomSlots
             vanillaSlots.Do(InitSlot);
 
             CustomSlot.slots.Do(TryAddSlot);
+            EpicLootCompatibility.InvalidatePlayerEffectCache(Player.m_localPlayer);
         }
 
         public static void TryAddSlot(CustomSlot slot)
