@@ -1,6 +1,7 @@
 ﻿using BepInEx.Bootstrap;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -17,7 +18,7 @@ namespace ExtraSlotsCustomSlots
 
         public static bool IsActive => _isActive && bbhQuiverSlotEnabled.Value;
 
-        public static bool IsQuiver(ItemDrop.ItemData item) => _isQuiver != null && _isQuiver(item);
+        public static bool IsQuiver(ItemDrop.ItemData item) => InventoryCompatibility.IsRuntimeItem(item) && _isQuiver != null && _isQuiver(item);
 
         public BowsBeforeHoesSlot()
         {
@@ -63,7 +64,7 @@ namespace ExtraSlotsCustomSlots
 
         public static void PatchBackpackItemData(ItemDrop.ItemData itemData)
         {
-            if (itemData == null)
+            if (!InventoryCompatibility.IsRuntimeItem(itemData))
                 return;
 
             itemData.m_shared.m_itemType = GetItemType();
@@ -74,7 +75,7 @@ namespace ExtraSlotsCustomSlots
             if (!BowsBeforeHoesSlot.IsActive && !force)
                 return;
 
-            if (inventory == null)
+            if (!InventoryCompatibility.IsRuntimeInventory(inventory))
                 return;
 
             foreach (ItemDrop.ItemData item in inventory.GetAllItems().Where(item => BowsBeforeHoesSlot.IsQuiver(item)))
@@ -103,12 +104,9 @@ namespace ExtraSlotsCustomSlots
         [HarmonyPatch(typeof(Player), nameof(Player.AddKnownItem))]
         public static class Player_AddKnownItem_BBHQuiverType
         {
-            private static void Postfix(Player __instance, ref ItemDrop.ItemData item)
+            private static void Prefix(ItemDrop.ItemData item)
             {
                 if (!BowsBeforeHoesSlot.IsActive)
-                    return;
-
-                if (__instance.m_knownMaterial.Contains(item.m_shared.m_name))
                     return;
 
                 if (BowsBeforeHoesSlot.IsQuiver(item))
@@ -131,9 +129,11 @@ namespace ExtraSlotsCustomSlots
             }
         }
 
-        [HarmonyPatch(typeof(Inventory), nameof(Inventory.Load))]
+        [HarmonyPatch]
         public class Inventory_Load_BBHQuiverType
         {
+            private static IEnumerable<MethodBase> TargetMethods() => InventoryCompatibility.GetLoadMethods();
+
             public static void Postfix(Inventory __instance)
             {
                 if (!BowsBeforeHoesSlot.IsActive)

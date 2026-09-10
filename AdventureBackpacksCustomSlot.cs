@@ -41,6 +41,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         public string m_backpackItem = "";
         public List<GameObject> m_backpackItemInstances;
         public int m_currentbackpackItemHash = 0;
+        internal readonly EquipmentVisualMetadata metadata = new EquipmentVisualMetadata("AdventureBackpackItem");
 
         public static readonly int s_backpackItem = "AdventureBackpackItem".GetStableHashCode();
     }
@@ -54,19 +55,15 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         public static void SetBackpackItem(this VisEquipment visEquipment, string name)
         {
             VisEquipmentAdventureBackpack backpackData = visEquipment.GetBackpackData();
-
-            if (!(backpackData.m_backpackItem == name))
-            {
-                backpackData.m_backpackItem = name;
-                if (visEquipment.m_nview.GetZDO() != null && visEquipment.m_nview.IsOwner())
-                    visEquipment.m_nview.GetZDO().Set(VisEquipmentAdventureBackpack.s_backpackItem, (!string.IsNullOrEmpty(name)) ? name.GetStableHashCode() : 0);
-            }
+            backpackData.m_backpackItem = name ?? "";
+            if (visEquipment.m_nview && visEquipment.m_nview.IsValid() && visEquipment.m_nview.IsOwner())
+                visEquipment.m_nview.GetZDO().Set(VisEquipmentAdventureBackpack.s_backpackItem, !string.IsNullOrEmpty(name) ? name.GetStableHashCode() : 0);
         }
 
         public static bool SetBackpackEquipped(this VisEquipment visEquipment, int hash)
         {
             VisEquipmentAdventureBackpack backpackData = visEquipment.GetBackpackData();
-            if (backpackData.m_currentbackpackItemHash == hash)
+            if (backpackData.m_currentbackpackItemHash == hash && !backpackData.metadata.HasChanged(visEquipment))
                 return false;
 
             if (backpackData.m_backpackItemInstances != null)
@@ -84,11 +81,14 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                 backpackData.m_backpackItemInstances = null;
             }
 
+            backpackData.metadata.Read(visEquipment, out int variant, out int quality);
+            backpackData.metadata.MarkRendered(variant, quality);
             backpackData.m_currentbackpackItemHash = hash;
             if (hash != 0)
             {
-                backpackData.m_backpackItemInstances = visEquipment.AttachArmor(hash);
-                CustomItemType.ReorderBones?.Invoke(visEquipment, hash, backpackData.m_backpackItemInstances);
+                backpackData.m_backpackItemInstances = visEquipment.AttachArmor(hash, variant, quality);
+                if (backpackData.m_backpackItemInstances != null)
+                    CustomItemType.ReorderBones?.Invoke(visEquipment, hash, backpackData.m_backpackItemInstances);
             }
 
             return true;
@@ -99,21 +99,19 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         {
             private static void Prefix(VisEquipment __instance)
             {
-                if (!AdventureBackpacksSlot.IsActive)
-                    return;
-
                 int backpackEquipped = 0;
-                ZDO zDO = __instance.m_nview.GetZDO();
-                if (zDO != null)
+                if (AdventureBackpacksSlot.IsActive)
                 {
-                    backpackEquipped = zDO.GetInt(VisEquipmentAdventureBackpack.s_backpackItem);
-                }
-                else
-                {
-                    VisEquipmentAdventureBackpack backpackData = __instance.GetBackpackData();
-                    if (!string.IsNullOrEmpty(backpackData.m_backpackItem))
+                    ZDO zDO = __instance.m_nview ? __instance.m_nview.GetZDO() : null;
+                    if (zDO != null)
                     {
-                        backpackEquipped = backpackData.m_backpackItem.GetStableHashCode();
+                        backpackEquipped = zDO.GetInt(VisEquipmentAdventureBackpack.s_backpackItem);
+                    }
+                    else
+                    {
+                        VisEquipmentAdventureBackpack backpackData = __instance.GetBackpackData();
+                        if (!string.IsNullOrEmpty(backpackData.m_backpackItem))
+                            backpackEquipped = backpackData.m_backpackItem.GetStableHashCode();
                     }
                 }
 
@@ -121,18 +119,19 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                     __instance.UpdateLodgroup();
             }
         }
-        
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.SetupVisEquipment))]
         public static class Humanoid_SetupVisEquipment_CustomItemType
         {
             private static void Postfix(Humanoid __instance, VisEquipment visEq)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!visEq)
                     return;
 
-                ItemDrop.ItemData itemData = __instance.GetAdventureBackpack();
-
-                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null && adventureBackpackItemIsVisible.Value) ? itemData.m_dropPrefab.name : "");
+                ItemDrop.ItemData itemData = AdventureBackpacksSlot.IsActive ? __instance.GetAdventureBackpack() : null;
+                bool visible = itemData?.m_dropPrefab != null && adventureBackpackItemIsVisible.Value;
+                visEq.SetBackpackItem(visible ? itemData.m_dropPrefab.name : "");
+                visEq.GetBackpackData().metadata.Set(visEq, visible ? itemData.m_variant : 0, visible ? itemData.m_quality : 0);
             }
         }
     }
@@ -161,19 +160,23 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             [HarmonyBefore(AdventureBackpacksSlot.pluginID)]
             private static void Postfix(Humanoid __instance, ItemDrop.ItemData item, ref bool __result, bool triggerEquipEffects)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!AdventureBackpacksSlot.IsActive || !__result)
+                    return;
+
+                if (!InventoryCompatibility.IsRuntimeInventory(__instance.GetInventory()) || !InventoryCompatibility.IsRuntimeItem(item))
                     return;
 
                 if (__instance.IsItemEquiped(item))
                     return;
 
-                if (!IsBackpack(item))
+                if (IsBackpack?.Invoke(item) != true)
                     return;
 
                 if (__instance.GetAdventureBackpack() != null)
                 {
                     __instance.UnequipItem(__instance.GetAdventureBackpack(), triggerEquipEffects);
-                    __instance.m_visEquipment.UpdateEquipmentVisuals();
+                    if (__instance.m_visEquipment)
+                        __instance.m_visEquipment.UpdateEquipmentVisuals();
                 }
 
                 __instance.SetAdventureBackpack(item);
@@ -196,7 +199,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                 if (!AdventureBackpacksSlot.IsActive)
                     return;
 
-                if (!IsBackpack(item))
+                if (!InventoryCompatibility.IsRuntimeItem(item) || IsBackpack?.Invoke(item) != true)
                     return;
 
                 if (__instance.GetAdventureBackpack() == item)
@@ -227,7 +230,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
                 if (!AdventureBackpacksSlot.IsActive)
                     return;
 
-                if (!IsBackpack(item))
+                if (!InventoryCompatibility.IsRuntimeItem(item) || IsBackpack?.Invoke(item) != true)
                     return;
 
                 __result = __result || __instance.GetAdventureBackpack() == item;
@@ -239,10 +242,10 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         {
             private static void Postfix(ItemDrop.ItemData __instance, ref bool __result)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!AdventureBackpacksSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(__instance))
                     return;
 
-                __result = __result || __instance.m_shared.m_itemType == AdventureBackpackItem.GetItemType() && IsBackpack(__instance);
+                __result = __result || __instance.m_shared.m_itemType == AdventureBackpackItem.GetItemType() && IsBackpack?.Invoke(__instance) == true;
             }
         }
 
@@ -281,20 +284,22 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         {
             private static void Prefix(Inventory __instance)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!AdventureBackpacksSlot.IsActive || !InventoryCompatibility.IsRuntimeInventory(__instance))
                     return;
 
-                if (__instance != Player.m_localPlayer?.GetInventory())
+                Player player = Player.m_localPlayer;
+                if (player == null || player.m_isLoading || __instance != player.GetInventory())
                     return;
 
-                if (Player.m_localPlayer.GetAdventureBackpack() is ItemDrop.ItemData item && !__instance.ContainsItem(item))
+                if (player.GetAdventureBackpack() is ItemDrop.ItemData item && !__instance.ContainsItem(item))
                 {
-                    Player.m_localPlayer.SetAdventureBackpack(null);
-                    Player.m_localPlayer.SetupEquipment();
+                    item.m_equipped = false;
+                    player.SetAdventureBackpack(null);
+                    player.SetupEquipment();
                 }
             }
         }
-        
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.GetEquipmentWeight))]
         public static class Humanoid_GetEquipmentWeight_CustomItemType
         {
@@ -422,7 +427,7 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
 
         public static void PatchBackpackItemData(ItemDrop.ItemData itemData)
         {
-            if (itemData == null)
+            if (!InventoryCompatibility.IsRuntimeItem(itemData))
                 return;
 
             itemData.m_shared.m_itemType = GetItemType();
@@ -434,10 +439,10 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             if (!AdventureBackpacksSlot.IsActive && !force)
                 return;
 
-            if (inventory == null)
+            if (!InventoryCompatibility.IsRuntimeInventory(inventory) || CustomItemType.IsBackpack == null)
                 return;
 
-            foreach (ItemDrop.ItemData item in inventory.GetAllItems().Where(item => CustomItemType.IsBackpack(item)))
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems().Where(item => InventoryCompatibility.IsRuntimeItem(item) && CustomItemType.IsBackpack(item)))
                 PatchBackpackItemData(item);
         }
 
@@ -452,26 +457,23 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             if (!AdventureBackpacksSlot.IsActive && !force)
                 return;
 
-            if (!ObjectDB.instance)
+            if (!ObjectDB.instance || ObjectDB.instance.m_items == null || CustomItemType.IsBackpack == null)
                 return;
 
             foreach (GameObject item in ObjectDB.instance.m_items)
-                if (item != null && item.GetComponent<ItemDrop>()?.m_itemData is ItemDrop.ItemData itemData && CustomItemType.IsBackpack(itemData))
+                if (item != null && item.GetComponent<ItemDrop>()?.m_itemData is ItemDrop.ItemData itemData && InventoryCompatibility.IsRuntimeItem(itemData) && CustomItemType.IsBackpack(itemData))
                     PatchBackpackItemData(itemData);
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.AddKnownItem))]
         public static class Player_AddKnownItem_AdventureBackpackStats
         {
-            private static void Postfix(Player __instance, ref ItemDrop.ItemData item)
+            private static void Prefix(ItemDrop.ItemData item)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!AdventureBackpacksSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(item))
                     return;
 
-                if (__instance.m_knownMaterial.Contains(item.m_shared.m_name))
-                    return;
-
-                if (CustomItemType.IsBackpack(item))
+                if (CustomItemType.IsBackpack?.Invoke(item) == true)
                     PatchBackpackItemData(item);
             }
         }
@@ -491,9 +493,11 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
             }
         }
 
-        [HarmonyPatch(typeof(Inventory), nameof(Inventory.Load))]
+        [HarmonyPatch]
         public class Inventory_Load_AdventureBackpackStats
         {
+            private static IEnumerable<MethodBase> TargetMethods() => InventoryCompatibility.GetLoadMethods();
+
             public static void Postfix(Inventory __instance)
             {
                 if (!AdventureBackpacksSlot.IsActive)
@@ -508,10 +512,10 @@ namespace ExtraSlotsCustomSlots.AdventureBackpacksCustomSlot
         {
             private static void Postfix(ref ItemDrop __instance)
             {
-                if (!AdventureBackpacksSlot.IsActive)
+                if (!AdventureBackpacksSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(__instance.m_itemData))
                     return;
 
-                if (CustomItemType.IsBackpack(__instance.m_itemData))
+                if (CustomItemType.IsBackpack?.Invoke(__instance.m_itemData) == true)
                     PatchBackpackItemData(__instance.m_itemData);
             }
         }

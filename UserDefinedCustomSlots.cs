@@ -71,6 +71,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
         public string m_item = "";
         public List<GameObject> m_instances;
         public int m_hash = 0;
+        internal EquipmentVisualMetadata metadata;
     }
 
     [Serializable]
@@ -106,7 +107,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
 
         public static VisEquipmentCustomItemState GetCustomItemState(this VisEquipment humanoid, int index)
         {
-            return index switch
+            VisEquipmentCustomItemState state = index switch
             {
                 0 => humanoid.GetCustomItemData().customItem1,
                 1 => humanoid.GetCustomItemData().customItem2,
@@ -118,24 +119,28 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                 7 => humanoid.GetCustomItemData().customItem8,
                 _ => null
             };
+
+            if (state != null && state.metadata == null)
+                state.metadata = new EquipmentVisualMetadata($"ESCS_CustomItemState_{index + 1}");
+
+            return state;
         }
 
         public static void SetCustomItemState(this VisEquipment visEquipment, int index, string name)
         {
             VisEquipmentCustomItemState customItemData = visEquipment.GetCustomItemState(index);
+            if (customItemData == null)
+                return;
 
-            if (customItemData.m_item != name)
-            {
-                customItemData.m_item = name;
-                if (visEquipment.m_nview.IsValid() && visEquipment.m_nview.IsOwner())
-                    visEquipment.m_nview.GetZDO().Set(customItemStateZdoHash[index], (!string.IsNullOrEmpty(name)) ? name.GetStableHashCode() : 0);
-            }
+            customItemData.m_item = name ?? "";
+            if (visEquipment.m_nview && visEquipment.m_nview.IsValid() && visEquipment.m_nview.IsOwner())
+                visEquipment.m_nview.GetZDO().Set(customItemStateZdoHash[index], !string.IsNullOrEmpty(name) ? name.GetStableHashCode() : 0);
         }
 
         public static bool SetCustomItemEquipped(this VisEquipment visEquipment, int hash, int index)
         {
             VisEquipmentCustomItemState customItemData = visEquipment.GetCustomItemState(index);
-            if (customItemData.m_hash == hash)
+            if (customItemData == null || customItemData.m_hash == hash && !customItemData.metadata.HasChanged(visEquipment))
                 return false;
 
             if (customItemData.m_instances != null)
@@ -153,9 +158,11 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                 customItemData.m_instances = null;
             }
 
+            customItemData.metadata.Read(visEquipment, out int variant, out int quality);
+            customItemData.metadata.MarkRendered(variant, quality);
             customItemData.m_hash = hash;
             if (hash != 0)
-                customItemData.m_instances = visEquipment.AttachArmor(hash);
+                customItemData.m_instances = visEquipment.AttachArmor(hash, variant, quality);
 
             return true;
         }
@@ -163,14 +170,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
         [HarmonyPatch(typeof(VisEquipment), nameof(VisEquipment.UpdateEquipmentVisuals))]
         public static class VisEquipment_UpdateEquipmentVisuals_CustomItemType
         {
-            public static VisEquipment visEq;
-            public static bool updateLodGroup;
-
-            private static void Prefix(VisEquipment __instance)
+            private static void Postfix(VisEquipment __instance)
             {
-                ZDO zDO = __instance.m_nview?.GetZDO();
-
-                updateLodGroup = false;
+                ZDO zDO = __instance.m_nview ? __instance.m_nview.GetZDO() : null;
+                bool updateLodGroup = false;
                 for (int i = 0; i < CustomItemSlots.SlotsAmount; i++)
                 {
                     int itemEquipped = 0;
@@ -189,26 +192,9 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                         updateLodGroup = true;
                 }
 
-                visEq = __instance;
-            }
-
-            private static void Postfix(VisEquipment __instance)
-            {
+                // Keep refresh state local to this visual update, including nested character updates.
                 if (updateLodGroup)
                     __instance.UpdateLodgroup();
-
-                visEq = null;
-                updateLodGroup = false;
-            }
-        }
-
-        [HarmonyPatch(typeof(VisEquipment), nameof(VisEquipment.UpdateLodgroup))]
-        public static class VisEquipment_UpdateLodgroup_CustomItemType
-        {
-            private static void Finalizer(VisEquipment __instance)
-            {
-                if (__instance == VisEquipment_UpdateEquipmentVisuals_CustomItemType.visEq)
-                    VisEquipment_UpdateEquipmentVisuals_CustomItemType.updateLodGroup = false;
             }
         }
 
@@ -217,10 +203,15 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
         {
             private static void Postfix(Humanoid __instance, VisEquipment visEq)
             {
+                if (!visEq)
+                    return;
+
                 for (int i = 0; i < CustomItemSlots.SlotsAmount; i++)
                 {
                     ItemDrop.ItemData itemData = __instance.GetCustomItem(i);
-                    visEq.SetCustomItemState(i, (itemData != null && itemData.m_dropPrefab != null && UserDefinedSlot.IsItemInSlotVisible(i)) ? itemData.m_dropPrefab.name : "");
+                    bool visible = itemData?.m_dropPrefab != null && UserDefinedSlot.IsItemInSlotVisible(i);
+                    visEq.SetCustomItemState(i, visible ? itemData.m_dropPrefab.name : "");
+                    visEq.GetCustomItemState(i).metadata.Set(visEq, visible ? itemData.m_variant : 0, visible ? itemData.m_quality : 0);
                 }
             }
         }
@@ -237,17 +228,38 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
 
         public static bool IsItemEquipped(ItemDrop.ItemData item) => GetCustomItemIndex(item) != -1;
 
+        private static ExtraSlots.Slots.Slot GetRegisteredSlot(int index) => ExtraSlots.API.FindSlot(CustomSlot.GetSlotID(UserDefinedSlot.GetSlotID(index)));
+
         public static int GetSlotForItem(ItemDrop.ItemData item)
         {
+            if (!InventoryCompatibility.IsRuntimeItem(item))
+                return -1;
+
+            int freeSlot = -1;
             int occupiedSlot = -1;
             for (int i = 0; i < UserDefinedSlot.userDefinedSlots.Length; i++)
-                if (UserDefinedSlot.userDefinedSlots[i] is UserDefinedSlot slot && slot.slotEnabled.Value && slot.isActive() && slot.itemIsValid(item))
-                    if (GetItem(i) == null)
-                        return i;
-                    else
-                        occupiedSlot = i;
+            {
+                if (!(UserDefinedSlot.userDefinedSlots[i] is UserDefinedSlot slot) || !slot.slotEnabled.Value)
+                    continue;
 
-            return occupiedSlot;
+                ExtraSlots.Slots.Slot registeredSlot = GetRegisteredSlot(i);
+                if (registeredSlot == null || !registeredSlot.ItemFits(item))
+                    continue;
+
+                // A physical placement is authoritative when several user slots accept this item.
+                if (registeredSlot.Item == item)
+                    return i;
+
+                if (GetItem(i) == null)
+                {
+                    if (freeSlot == -1)
+                        freeSlot = i;
+                }
+                else
+                    occupiedSlot = i;
+            }
+
+            return freeSlot != -1 ? freeSlot : occupiedSlot;
         }
 
         public static IEnumerable<ItemDrop.ItemData> GetEquippedItems()
@@ -340,48 +352,88 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
             private static class Humanoid_EquipItem_CustomItem
             {
                 private static readonly ItemDrop.ItemData.ItemType tempType = (ItemDrop.ItemData.ItemType)767;
-                private static ItemDrop.ItemData.ItemType itemType;
 
-                private static void Prefix(Humanoid __instance, ItemDrop.ItemData item, ref int __state)
+                private sealed class EquipState
                 {
-                    if (!IsValidPlayer(__instance))
-                        return;
+                    internal int SlotIndex;
+                    internal ItemDrop.ItemData.SharedData SharedData;
+                    internal ItemDrop.ItemData.ItemType OriginalType;
+                    private bool restored;
 
-                    if (item == null)
-                        return;
-
-                    if (!IsItemEquipped(item) && (__state = GetSlotForItem(item)) != -1)
+                    internal void Restore()
                     {
-                        itemType = item.m_shared.m_itemType;
-                        item.m_shared.m_itemType = tempType;
-                        if (__instance.m_visEquipment && __instance.m_visEquipment.m_isPlayer)
-                            item.m_shared.m_equipEffect.Create(__instance.transform.position + Vector3.up, __instance.transform.rotation);
+                        if (restored)
+                            return;
+
+                        SharedData.m_itemType = OriginalType;
+                        restored = true;
                     }
                 }
 
-                [HarmonyPriority(Priority.First)]
-                private static void Postfix(Humanoid __instance, ItemDrop.ItemData item, bool triggerEquipEffects, int __state, ref bool __result)
+                private static bool Prefix(Humanoid __instance, ItemDrop.ItemData item, ref EquipState __state, ref bool __result)
                 {
-                    if (!IsValidPlayer(__instance))
-                        return;
+                    if (!IsValidPlayer(__instance) || item == null || IsItemEquipped(item))
+                        return true;
 
-                    if (item == null || item.m_shared.m_itemType != tempType || __state == -1)
-                        return;
-
-                    item.m_shared.m_itemType = itemType;
-
-                    if (__instance.GetCustomItem(__state) is ItemDrop.ItemData customItem)
-                        __instance.UnequipItem(customItem, triggerEquipEffects);
-
-                    __instance.SetCustomItem(__state, item);
-
-                    if (__instance.IsItemEquiped(item))
+                    if (!InventoryCompatibility.IsRuntimeInventory(__instance.GetInventory()) || !InventoryCompatibility.IsRuntimeItem(item))
                     {
-                        item.m_equipped = true;
-                        __result = true;
+                        __result = false;
+                        return false;
                     }
 
+                    int slotIndex = GetSlotForItem(item);
+                    if (slotIndex == -1 || !__instance.GetInventory().ContainsItem(item))
+                        return true;
+
+                    // The native world-level check depends on the original Utility/Trinket type.
+                    if (Game.m_worldLevel > 0 && item.m_worldLevel < Game.m_worldLevel &&
+                        (item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Utility || item.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trinket))
+                    {
+                        __instance.Message(MessageHud.MessageType.Center, "$msg_ng_item_too_low");
+                        __result = false;
+                        return false;
+                    }
+
+                    __state = new EquipState { SlotIndex = slotIndex, SharedData = item.m_shared, OriginalType = item.m_shared.m_itemType };
+                    item.m_shared.m_itemType = tempType;
+                    return true;
+                }
+
+                [HarmonyPriority(Priority.First + 1)]
+                private static void Postfix(Humanoid __instance, ItemDrop.ItemData item, bool triggerEquipEffects, EquipState __state, ref bool __result)
+                {
+                    if (__state == null)
+                        return;
+
+                    __state.Restore();
+                    if (!__result)
+                        return;
+
+                    ExtraSlots.Slots.Slot slot = GetRegisteredSlot(__state.SlotIndex);
+                    if (!IsValidPlayer(__instance) || item == null || !__instance.GetInventory().ContainsItem(item) || slot == null || !slot.ItemFits(item))
+                    {
+                        __result = false;
+                        return;
+                    }
+
+                    if (__instance.IsItemEquiped(item))
+                        return;
+
+                    if (__instance.GetCustomItem(__state.SlotIndex) is ItemDrop.ItemData customItem)
+                        __instance.UnequipItem(customItem, triggerEquipEffects);
+
+                    __instance.SetCustomItem(__state.SlotIndex, item);
+                    item.m_equipped = true;
                     __instance.SetupEquipment();
+
+                    if (__instance.m_visEquipment && __instance.m_visEquipment.m_isPlayer && FejdStartup.instance == null)
+                        item.m_shared.m_equipEffect.Create(__instance.transform.position + Vector3.up, __instance.transform.rotation, null, 1f, -1, __instance.GetZDOID());
+                }
+
+                private static Exception Finalizer(EquipState __state, Exception __exception)
+                {
+                    __state?.Restore();
+                    return __exception;
                 }
             }
 
@@ -391,7 +443,7 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                 [HarmonyPriority(Priority.First)]
                 private static void Postfix(Humanoid __instance, ItemDrop.ItemData item)
                 {
-                    if (item == null)
+                    if (!IsValidPlayer(__instance) || item == null)
                         return;
 
                     if (GetCustomItemIndex(item) is int i && i != -1)
@@ -506,13 +558,14 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
             {
                 private static void Postfix(Player __instance)
                 {
-                    if (!IsValidPlayer(__instance) || __instance.m_isLoading)
+                    if (!IsValidPlayer(__instance) || __instance.m_isLoading || !InventoryCompatibility.IsRuntimeInventory(__instance.GetInventory()))
                         return;
 
                     bool setupVisEq = false;
                     for (int i = 0; i < SlotsAmount; i++)
-                        if (GetItem(i) is ItemDrop.ItemData customItem && !Player.m_localPlayer.GetInventory().ContainsItem(customItem))
+                        if (GetItem(i) is ItemDrop.ItemData customItem && !__instance.GetInventory().ContainsItem(customItem))
                         {
+                            customItem.m_equipped = false;
                             __instance.SetCustomItem(i, null);
                             setupVisEq = true;
                         }
