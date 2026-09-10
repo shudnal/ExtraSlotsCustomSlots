@@ -66,15 +66,14 @@ namespace ExtraSlotsCustomSlots
             Player player = Player.m_localPlayer;
             if (player != null && !player.m_isLoading && InventoryCompatibility.IsRuntimeInventory(player.GetInventory()))
             {
+                UserDefinedCustomSlots.CustomItemSlots.SynchronizeEquipmentSlots(player);
                 for (int i = 0; i < maxAmount; i++)
                 {
                     ItemDrop.ItemData item = UserDefinedCustomSlots.CustomItemSlots.GetItem(i);
                     if (item == null)
                         continue;
 
-                    UserDefinedSlot definition = userDefinedSlots[i];
-                    ExtraSlots.Slots.Slot registered = ExtraSlots.API.FindSlot(CustomSlot.GetSlotID(GetSlotID(i)));
-                    if (definition == null || !definition.slotEnabled.Value || registered == null || !registered.ItemFits(item))
+                    if (!UserDefinedCustomSlots.CustomItemSlots.CanUseSlot(i, item, out _))
                         player.UnequipItem(item, triggerEquipEffects: false);
                 }
             }
