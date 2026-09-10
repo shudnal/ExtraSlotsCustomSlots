@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using static ExtraSlotsCustomSlots.ExtraSlotsCustomSlots;
@@ -40,6 +41,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         public string m_backpackItem = "";
         public List<GameObject> m_backpackItemInstances;
         public int m_currentbackpackItemHash = 0;
+        internal readonly EquipmentVisualMetadata metadata = new EquipmentVisualMetadata("JudesEquipmentBackpackItem");
 
         public static readonly int s_backpackItem = "JudesEquipmentBackpackItem".GetStableHashCode();
     }
@@ -53,19 +55,15 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         private static void SetBackpackItem(this VisEquipment visEquipment, string name)
         {
             VisEquipmentJudesEquipmentBackpack backpackData = visEquipment.GetBackpackData();
-
-            if (!(backpackData.m_backpackItem == name))
-            {
-                backpackData.m_backpackItem = name;
-                if (visEquipment.m_nview.GetZDO() != null && visEquipment.m_nview.IsOwner())
-                    visEquipment.m_nview.GetZDO().Set(VisEquipmentJudesEquipmentBackpack.s_backpackItem, (!string.IsNullOrEmpty(name)) ? name.GetStableHashCode() : 0);
-            }
+            backpackData.m_backpackItem = name ?? "";
+            if (visEquipment.m_nview && visEquipment.m_nview.IsValid() && visEquipment.m_nview.IsOwner())
+                visEquipment.m_nview.GetZDO().Set(VisEquipmentJudesEquipmentBackpack.s_backpackItem, !string.IsNullOrEmpty(name) ? name.GetStableHashCode() : 0);
         }
 
         private static bool SetBackpackEquipped(this VisEquipment visEquipment, int hash)
         {
             VisEquipmentJudesEquipmentBackpack backpackData = visEquipment.GetBackpackData();
-            if (backpackData.m_currentbackpackItemHash == hash)
+            if (backpackData.m_currentbackpackItemHash == hash && !backpackData.metadata.HasChanged(visEquipment))
                 return false;
 
             if (backpackData.m_backpackItemInstances != null)
@@ -81,11 +79,14 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
                 backpackData.m_backpackItemInstances = null;
             }
 
+            backpackData.metadata.Read(visEquipment, out int variant, out int quality);
+            backpackData.metadata.MarkRendered(variant, quality);
             backpackData.m_currentbackpackItemHash = hash;
             if (hash != 0)
             {
-                backpackData.m_backpackItemInstances = visEquipment.AttachArmor(hash);
-                CustomItemType.ReorderBones?.Invoke(visEquipment, hash, backpackData.m_backpackItemInstances);
+                backpackData.m_backpackItemInstances = visEquipment.AttachArmor(hash, variant, quality);
+                if (backpackData.m_backpackItemInstances != null)
+                    CustomItemType.ReorderBones?.Invoke(visEquipment, hash, backpackData.m_backpackItemInstances);
             }
 
             return true;
@@ -96,21 +97,19 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         {
             private static void Prefix(VisEquipment __instance)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
-                    return;
-
                 int backpackEquipped = 0;
-                ZDO zDO = __instance.m_nview.GetZDO();
-                if (zDO != null)
+                if (JudesEquipmentBackpackSlot.IsActive)
                 {
-                    backpackEquipped = zDO.GetInt(VisEquipmentJudesEquipmentBackpack.s_backpackItem);
-                }
-                else
-                {
-                    VisEquipmentJudesEquipmentBackpack backpackData = __instance.GetBackpackData();
-                    if (!string.IsNullOrEmpty(backpackData.m_backpackItem))
+                    ZDO zDO = __instance.m_nview ? __instance.m_nview.GetZDO() : null;
+                    if (zDO != null)
                     {
-                        backpackEquipped = backpackData.m_backpackItem.GetStableHashCode();
+                        backpackEquipped = zDO.GetInt(VisEquipmentJudesEquipmentBackpack.s_backpackItem);
+                    }
+                    else
+                    {
+                        VisEquipmentJudesEquipmentBackpack backpackData = __instance.GetBackpackData();
+                        if (!string.IsNullOrEmpty(backpackData.m_backpackItem))
+                            backpackEquipped = backpackData.m_backpackItem.GetStableHashCode();
                     }
                 }
 
@@ -118,18 +117,19 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
                     __instance.UpdateLodgroup();
             }
         }
-        
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.SetupVisEquipment))]
         public static class Humanoid_SetupVisEquipment_CustomItemType
         {
             private static void Postfix(Humanoid __instance, VisEquipment visEq)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!visEq)
                     return;
 
-                ItemDrop.ItemData itemData = __instance.GetJudesEquipmentBackpack();
-
-                visEq.SetBackpackItem((itemData != null && itemData.m_dropPrefab != null && judesEquipmentBackpackItemIsVisible.Value) ? itemData.m_dropPrefab.name : "");
+                ItemDrop.ItemData itemData = JudesEquipmentBackpackSlot.IsActive ? __instance.GetJudesEquipmentBackpack() : null;
+                bool visible = itemData?.m_dropPrefab != null && judesEquipmentBackpackItemIsVisible.Value;
+                visEq.SetBackpackItem(visible ? itemData.m_dropPrefab.name : "");
+                visEq.GetBackpackData().metadata.Set(visEq, visible ? itemData.m_variant : 0, visible ? itemData.m_quality : 0);
             }
         }
     }
@@ -152,19 +152,23 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
             [HarmonyBefore(JudesEquipmentBackpackSlot.pluginID)]
             private static void Postfix(Humanoid __instance, ItemDrop.ItemData item, ref bool __result, bool triggerEquipEffects)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!JudesEquipmentBackpackSlot.IsActive || !__result)
+                    return;
+
+                if (!InventoryCompatibility.IsRuntimeInventory(__instance.GetInventory()) || !InventoryCompatibility.IsRuntimeItem(item))
                     return;
 
                 if (__instance.IsItemEquiped(item))
                     return;
 
-                if (!IsBackpack(item))
+                if (IsBackpack?.Invoke(item) != true)
                     return;
 
                 if (__instance.GetJudesEquipmentBackpack() != null)
                 {
                     __instance.UnequipItem(__instance.GetJudesEquipmentBackpack(), triggerEquipEffects);
-                    __instance.m_visEquipment.UpdateEquipmentVisuals();
+                    if (__instance.m_visEquipment)
+                        __instance.m_visEquipment.UpdateEquipmentVisuals();
                 }
 
                 __instance.SetJudesEquipmentBackpack(item);
@@ -187,7 +191,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
                 if (!JudesEquipmentBackpackSlot.IsActive)
                     return;
 
-                if (!IsBackpack(item))
+                if (!InventoryCompatibility.IsRuntimeItem(item) || IsBackpack?.Invoke(item) != true)
                     return;
 
                 if (__instance.GetJudesEquipmentBackpack() == item)
@@ -218,7 +222,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
                 if (!JudesEquipmentBackpackSlot.IsActive)
                     return;
 
-                if (!IsBackpack(item))
+                if (!InventoryCompatibility.IsRuntimeItem(item) || IsBackpack?.Invoke(item) != true)
                     return;
 
                 __result = __result || __instance.GetJudesEquipmentBackpack() == item;
@@ -230,10 +234,10 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         {
             private static void Postfix(ItemDrop.ItemData __instance, ref bool __result)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!JudesEquipmentBackpackSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(__instance))
                     return;
 
-                __result = __result || __instance.m_shared.m_itemType == JudesEquipmentBackpackItem.GetItemType() && IsBackpack(__instance);
+                __result = __result || __instance.m_shared.m_itemType == JudesEquipmentBackpackItem.GetItemType() && IsBackpack?.Invoke(__instance) == true;
             }
         }
 
@@ -272,20 +276,22 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         {
             private static void Prefix(Inventory __instance)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!JudesEquipmentBackpackSlot.IsActive || !InventoryCompatibility.IsRuntimeInventory(__instance))
                     return;
 
-                if (__instance != Player.m_localPlayer?.GetInventory())
+                Player player = Player.m_localPlayer;
+                if (player == null || player.m_isLoading || __instance != player.GetInventory())
                     return;
 
-                if (Player.m_localPlayer.GetJudesEquipmentBackpack() is ItemDrop.ItemData item && !__instance.ContainsItem(item))
+                if (player.GetJudesEquipmentBackpack() is ItemDrop.ItemData item && !__instance.ContainsItem(item))
                 {
-                    Player.m_localPlayer.SetJudesEquipmentBackpack(null);
-                    Player.m_localPlayer.SetupEquipment();
+                    item.m_equipped = false;
+                    player.SetJudesEquipmentBackpack(null);
+                    player.SetupEquipment();
                 }
             }
         }
-        
+
         [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.GetEquipmentWeight))]
         public static class Humanoid_GetEquipmentWeight_CustomItemType
         {
@@ -413,7 +419,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
 
         public static void PatchBackpackItemData(ItemDrop.ItemData itemData)
         {
-            if (itemData?.m_shared == null)
+            if (!InventoryCompatibility.IsRuntimeItem(itemData))
                 return;
 
             itemData.m_shared.m_itemType = GetItemType();
@@ -425,10 +431,10 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
             if (!JudesEquipmentBackpackSlot.IsActive && !force)
                 return;
 
-            if (inventory == null)
+            if (!InventoryCompatibility.IsRuntimeInventory(inventory) || CustomItemType.IsBackpack == null)
                 return;
 
-            foreach (ItemDrop.ItemData item in inventory.GetAllItems().Where(item => CustomItemType.IsBackpack(item)))
+            foreach (ItemDrop.ItemData item in inventory.GetAllItems().Where(item => InventoryCompatibility.IsRuntimeItem(item) && CustomItemType.IsBackpack(item)))
                 PatchBackpackItemData(item);
         }
 
@@ -455,7 +461,7 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
                     continue;
 
                 ItemDrop.ItemData itemData = item.GetComponent<ItemDrop>()?.m_itemData;
-                if (itemData?.m_shared == null)
+                if (!InventoryCompatibility.IsRuntimeItem(itemData))
                     continue;
 
                 if (CustomItemType.IsBackpack(itemData))
@@ -466,15 +472,12 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         [HarmonyPatch(typeof(Player), nameof(Player.AddKnownItem))]
         public static class Player_AddKnownItem_JudesEquipmentBackpackStats
         {
-            private static void Postfix(Player __instance, ref ItemDrop.ItemData item)
+            private static void Prefix(ItemDrop.ItemData item)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!JudesEquipmentBackpackSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(item))
                     return;
 
-                if (__instance.m_knownMaterial.Contains(item.m_shared.m_name))
-                    return;
-
-                if (CustomItemType.IsBackpack(item))
+                if (CustomItemType.IsBackpack?.Invoke(item) == true)
                     PatchBackpackItemData(item);
             }
         }
@@ -494,9 +497,11 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
             }
         }
 
-        [HarmonyPatch(typeof(Inventory), nameof(Inventory.Load))]
+        [HarmonyPatch]
         public class Inventory_Load_JudesEquipmentBackpackStats
         {
+            private static IEnumerable<MethodBase> TargetMethods() => InventoryCompatibility.GetLoadMethods();
+
             public static void Postfix(Inventory __instance)
             {
                 if (!JudesEquipmentBackpackSlot.IsActive)
@@ -511,10 +516,10 @@ namespace ExtraSlotsCustomSlots.JudesEquipmentBackpacksCustomSlot
         {
             private static void Postfix(ref ItemDrop __instance)
             {
-                if (!JudesEquipmentBackpackSlot.IsActive)
+                if (!JudesEquipmentBackpackSlot.IsActive || !InventoryCompatibility.IsRuntimeItem(__instance.m_itemData))
                     return;
 
-                if (CustomItemType.IsBackpack(__instance.m_itemData))
+                if (CustomItemType.IsBackpack?.Invoke(__instance.m_itemData) == true)
                     PatchBackpackItemData(__instance.m_itemData);
             }
         }

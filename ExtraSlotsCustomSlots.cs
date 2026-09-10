@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ExtraSlotsCustomSlots
 {
-    [BepInDependency("shudnal.ExtraSlots", BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency("shudnal.ExtraSlots", "1.2.1")]
     [BepInDependency(AdventureBackpacksSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(BackpacksSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(BowsBeforeHoesSlot.pluginID, BepInDependency.DependencyFlags.SoftDependency)]
@@ -25,7 +25,7 @@ namespace ExtraSlotsCustomSlots
     {
         public const string pluginID = "shudnal.ExtraSlotsCustomSlots";
         public const string pluginName = "Extra Slots Custom Slots";
-        public const string pluginVersion = "1.0.21";
+        public const string pluginVersion = "1.0.22";
 
         internal readonly Harmony harmony = new Harmony(pluginID);
 
@@ -36,6 +36,9 @@ namespace ExtraSlotsCustomSlots
         public static ConfigEntry<bool> configLocked;
         public static ConfigEntry<bool> loggingEnabled;
         public static ConfigEntry<string> slotsOrder;
+
+        private static bool updatingSlots;
+        private static bool slotUpdatePending;
 
         public static ConfigEntry<bool> adventureBackpackSlotEnabled;
         public static ConfigEntry<string> adventureBackpackSlotName;
@@ -132,7 +135,7 @@ namespace ExtraSlotsCustomSlots
         {
             configLocked = serverConfig("General", "Lock Configuration", defaultValue: true, "Configuration is locked and can be changed by server admins only.");
             loggingEnabled = config("General", "Logging enabled", defaultValue: false, "Enable logging. [Client controlled by default]", synchronizedSetting: false);
-            slotsOrder = config("General", "Slots order", defaultValue: CustomSlot.VanillaOrder, 
+            slotsOrder = config("General", "Slots order", defaultValue: CustomSlot.VanillaOrder,
                 new ConfigDescription("Comma-separated slot ID order of custom slots", null, new CustomConfigs.ConfigurationManagerAttributes { CustomDrawer = CustomConfigs.DrawOrderedFixedStrings(",") }));
 
             slotsOrder.SettingChanged += (s, e) => UpdateSlots();
@@ -215,9 +218,10 @@ namespace ExtraSlotsCustomSlots
             rustyBagsSlotName = config("Mod - Rusty Bags", "Name", "Bag", "Slot name. Use ExtraSlots translation files to add localized string.");
             rustyBagsSlotGlobalKey = config("Mod - Rusty Bags", "Global keys", "", "Comma-separated list of global keys and player unique keys. Slot will be active only if any key is enabled or list is not set.");
             rustyBagsSlotItemDiscovered = config("Mod - Rusty Bags", "Items discovered", "LeatherBag_RS,BarrelBag_RS,MinerBag_RS,UnbjornBag_RS,DvergerBag_RS", "Comma-separated list of items. Slot will be active only if any item is discovered or list is not set.");
-            rustyBagsSlotCombineWithQuiver = config("Mod - Rusty Bags", "Allow quivers", false, "By default quivers will not go into this slos. Enable to allow quivers. Do not forget to add quivers from quiver slot item list.");
+            rustyBagsSlotCombineWithQuiver = config("Mod - Rusty Bags", "Allow quivers", false, "By default quivers will not go into this slot. Enable to allow quivers. Do not forget to add quivers from quiver slot item list.");
 
             rustyBagsSlotEnabled.SettingChanged += (s, e) => UpdateSlots();
+            rustyBagsSlotCombineWithQuiver.SettingChanged += (s, e) => UpdateSlots();
 
             rustyBagsQuiverSlotEnabled = config("Mod - Rusty Bags - Quiver", "Enabled", true, "Enable Rusty Bags backpack slot.");
             rustyBagsQuiverSlotName = config("Mod - Rusty Bags - Quiver", "Name", "Quiver", "Slot name. Use ExtraSlots translation files to add localized string.");
@@ -239,33 +243,100 @@ namespace ExtraSlotsCustomSlots
 
         public static void UpdateSlots()
         {
-            CustomSlot.slots.Do(slot => slot.RemoveSlot());
+            if (instance == null || slotsOrder == null || UserDefinedSlot.userDefinedSlots.Any(slot => slot == null))
+                return;
+
+            if (updatingSlots)
+            {
+                slotUpdatePending = true;
+                return;
+            }
+
+            updatingSlots = true;
+            try
+            {
+                do
+                {
+                    slotUpdatePending = false;
+                    UpdateSlotRegistrations();
+                }
+                while (slotUpdatePending);
+            }
+            finally
+            {
+                updatingSlots = false;
+            }
+        }
+
+        private static void UpdateSlotRegistrations()
+        {
+            List<CustomSlot> previousDefinitions = CustomSlot.slots.ToList();
+            List<CustomSlot> previous = previousDefinitions.Where(slot => slot.initialized).GroupBy(slot => slot.slotID).Select(group => group.First()).ToList();
             CustomSlot.slots.Clear();
+            try
+            {
+                // Ignore repeated IDs and append omitted defaults without constructing duplicates.
+                slotsOrder.Value.Split(',').Concat(CustomSlot.GetVanillaOrder()).Select(id => id.Trim())
+                    .Where(id => !id.IsNullOrWhiteSpace()).Distinct().Do(InitSlot);
+            }
+            catch
+            {
+                CustomSlot.slots.Clear();
+                CustomSlot.slots.AddRange(previousDefinitions);
+                throw;
+            }
 
-            // In case slots order config value was changed outside of configuration manager 
-            // Iterate slots order from config value then add what's left from vanilla slots order
+            Dictionary<string, CustomSlot> previousByID = previous.ToDictionary(slot => slot.slotID);
+            for (int i = 0; i < CustomSlot.slots.Count; i++)
+            {
+                CustomSlot definition = CustomSlot.slots[i];
+                if (definition.initialized && previousByID.TryGetValue(definition.slotID, out CustomSlot retained))
+                {
+                    retained.UpdateDefinition(definition);
+                    CustomSlot.slots[i] = retained;
+                }
+            }
 
-            slotsOrder.Value.Split(',').Select(s => s.Trim()).Where(s => !s.IsNullOrWhiteSpace()).Do(InitSlot);
+            List<CustomSlot> desired = CustomSlot.slots.Where(slot => slot.initialized).ToList();
+            int commonPrefix = 0;
+            while (commonPrefix < previous.Count && commonPrefix < desired.Count && previous[commonPrefix].slotID == desired[commonPrefix].slotID &&
+                ExtraSlots.API.FindSlot(CustomSlot.GetSlotID(desired[commonPrefix].slotID)) != null)
+                commonPrefix++;
 
-            List<string> vanillaSlots = CustomSlot.VanillaOrder.Split(',').ToList();
+            // Retain unchanged registrations and their residents. For the changed suffix, let
+            // ExtraSlots own relocation and deferred recovery; never stage items in an inventory.
+            for (int i = previous.Count - 1; i >= commonPrefix; i--)
+                if (previous[i].RemoveSlot())
+                    LogInfo($"Slot {previous[i]} was removed");
 
-            CustomSlot.slots.Do(slot => vanillaSlots.Remove(slot.slotID));
+            CustomSlot precedingSlot = commonPrefix > 0 ? desired[commonPrefix - 1] : null;
+            for (int i = commonPrefix; i < desired.Count; i++)
+                if (TryAddSlot(desired[i], precedingSlot))
+                    precedingSlot = desired[i];
 
-            vanillaSlots.Do(InitSlot);
-
-            CustomSlot.slots.Do(TryAddSlot);
+            UserDefinedSlot.RefreshSlots();
             EpicLootCompatibility.InvalidatePlayerEffectCache(Player.m_localPlayer);
         }
 
-        public static void TryAddSlot(CustomSlot slot)
-        {
-            if (slot.RemoveSlot())
-                LogInfo($"Slot {slot} was removed");
+        public static void TryAddSlot(CustomSlot slot) => TryAddSlot(slot, null);
 
-            if (slot.AddSlot())
+        private static bool TryAddSlot(CustomSlot slot, CustomSlot precedingSlot)
+        {
+            if (!slot.initialized)
+                return false;
+
+            // Replace only the legacy unprefixed registration, not an existing ESCS slot.
+            if (ExtraSlots.API.RemoveSlot(slot.slotID))
+                LogInfo($"Legacy slot {slot} was removed");
+
+            if (slot.AddSlotAfter(precedingSlot))
+            {
                 LogInfo($"Slot {slot} was added");
-            else if (slot.initialized)
-                LogWarning($"Error while trying to add new slot {slot}.");
+                return true;
+            }
+
+            LogWarning($"Error while trying to add new slot {slot}. Check the available custom-slot capacity in ExtraSlots.");
+            return false;
         }
 
         public static void InitSlot(string slotID)

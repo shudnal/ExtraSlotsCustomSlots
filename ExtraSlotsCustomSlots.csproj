@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <ExtraSlotsAssemblyPath Condition="'$(ExtraSlotsAssemblyPath)' == ''">$(MSBuildProjectDirectory)\..\ExtraSlots\package\thunderstore\ExtraSlots\ExtraSlots.dll</ExtraSlotsAssemblyPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -49,6 +50,8 @@
     <Compile Include="CustomSlot.cs" />
     <Compile Include="ExtraSlotsCustomSlots.cs" />
     <Compile Include="EpicLootCompatibility.cs" />
+    <Compile Include="EquipmentVisualMetadata.cs" />
+    <Compile Include="InventoryCompatibility.cs" />
     <Compile Include="RustyBags.cs" />
     <Compile Include="MagicPlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -76,9 +79,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>F:\Steam\steamapps\common\Valheim\BepInEx\core\BepInEx.dll</HintPath>
     </Reference>
-    <Reference Include="ExtraSlots, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="ExtraSlots, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Libs\ExtraSlots.dll</HintPath>
+      <HintPath>$(ExtraSlotsAssemblyPath)</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="ConditionalConfigSync, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -103,9 +107,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Libs\ExtraSlots.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="ILRepack.targets" />
     <None Include="UpdateThunderstoreManifest.ps1" />
   </ItemGroup>
@@ -116,5 +117,12 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <Target Name="ValidateExtraSlotsReference" BeforeTargets="ResolveAssemblyReferences" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Error Condition="!Exists('$(ExtraSlotsAssemblyPath)')" Text="ExtraSlots.dll was not found. Set ExtraSlotsAssemblyPath to a built ExtraSlots 1.2.1 or newer DLL adapted for Valheim 1.0.7." />
+    <GetAssemblyIdentity AssemblyFiles="$(ExtraSlotsAssemblyPath)">
+      <Output TaskParameter="Assemblies" ItemName="_ExtraSlotsReferenceIdentity" />
+    </GetAssemblyIdentity>
+    <Error Condition="$([MSBuild]::VersionLessThan('%(_ExtraSlotsReferenceIdentity.Version)', '1.2.1.0'))" Text="ExtraSlots 1.2.1 or newer is required. Replace the DLL referenced by ExtraSlotsAssemblyPath." />
+  </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
