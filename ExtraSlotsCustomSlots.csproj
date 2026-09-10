@@ -12,7 +12,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <ExtraSlotsAssemblyPath Condition="'$(ExtraSlotsAssemblyPath)' == ''">$(MSBuildProjectDirectory)\..\ExtraSlots\bin\Release\ExtraSlots.dll</ExtraSlotsAssemblyPath>
+    <ExtraSlotsAssemblyPath Condition="'$(ExtraSlotsAssemblyPath)' == ''">$(MSBuildProjectDirectory)\..\ExtraSlots\package\thunderstore\ExtraSlots\ExtraSlots.dll</ExtraSlotsAssemblyPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
