@@ -41,7 +41,9 @@ namespace ExtraSlotsCustomSlots
             itemIsVisible = instance.config(groupName, "Item is visible", true, "Make item in that slot visible on player model (if supported by an item itself).");
 
             slotEnabled.SettingChanged += (sender, args) => UpdateSlots();
-            slotItemList.SettingChanged += (sender, args) => UpdateItemList();
+            slotItemList.SettingChanged += (sender, args) => { UpdateItemList(); if (initialized) RefreshSlots(); };
+            slotGlobalKey.SettingChanged += (sender, args) => { if (initialized) RefreshSlots(); };
+            slotName.SettingChanged += (sender, args) => { if (initialized) RefreshSlots(); };
             itemIsVisible.SettingChanged += (sender, args) => Player.m_localPlayer?.SetupEquipment();
 
             UpdateItemList();
@@ -59,9 +61,30 @@ namespace ExtraSlotsCustomSlots
             initialized = true;
         }
 
-        public static void UpdateSlot(string slotID) 
+        internal static void RefreshSlots()
         {
-            if (userDefinedSlots.FirstOrDefault(slot => slot.slotID == slotID) is UserDefinedSlot slot && slot.slotEnabled.Value)
+            Player player = Player.m_localPlayer;
+            if (player != null && !player.m_isLoading && InventoryCompatibility.IsRuntimeInventory(player.GetInventory()))
+            {
+                for (int i = 0; i < maxAmount; i++)
+                {
+                    ItemDrop.ItemData item = UserDefinedCustomSlots.CustomItemSlots.GetItem(i);
+                    if (item == null)
+                        continue;
+
+                    UserDefinedSlot definition = userDefinedSlots[i];
+                    ExtraSlots.Slots.Slot registered = ExtraSlots.API.FindSlot(CustomSlot.GetSlotID(GetSlotID(i)));
+                    if (definition == null || !definition.slotEnabled.Value || registered == null || !registered.ItemFits(item))
+                        player.UnequipItem(item, triggerEquipEffects: false);
+                }
+            }
+
+            ExtraSlots.API.UpdateSlots();
+        }
+
+        public static void UpdateSlot(string slotID)
+        {
+            if (userDefinedSlots.FirstOrDefault(slot => slot != null && slot.slotID == slotID) is UserDefinedSlot slot && slot.slotEnabled.Value)
                 slots.Add(slot);
         }
 

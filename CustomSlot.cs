@@ -23,7 +23,25 @@ namespace ExtraSlotsCustomSlots
 
         public Func<bool> isActive;
 
-        public bool AddSlot() => initialized && ExtraSlots.API.AddSlot(GetSlotID(slotID), getName, itemIsValid, isActive);
+        // Keep these callbacks bound to the retained definition, rather than to one revision
+        // of its delegates. Configuration refreshes can then preserve registered slot objects.
+        private string GetName() => getName?.Invoke() ?? "";
+        private bool ItemIsValid(ItemDrop.ItemData item) => InventoryCompatibility.IsRuntimeItem(item) && itemIsValid?.Invoke(item) == true;
+        private bool IsActive() => initialized && (isActive?.Invoke() ?? true);
+
+        public bool AddSlot() => initialized && ExtraSlots.API.AddSlot(GetSlotID(slotID), GetName, ItemIsValid, IsActive);
+
+        internal bool AddSlotAfter(CustomSlot precedingSlot) => precedingSlot == null ? AddSlot() :
+            initialized && ExtraSlots.API.AddSlotAfter(GetSlotID(slotID), GetName, ItemIsValid, IsActive, GetSlotID(precedingSlot.slotID));
+
+        internal void UpdateDefinition(CustomSlot definition)
+        {
+            GUID = definition.GUID;
+            initialized = definition.initialized;
+            itemIsValid = definition.itemIsValid;
+            getName = definition.getName;
+            isActive = definition.isActive;
+        }
 
         public bool RemoveSlot() => initialized && (ExtraSlots.API.RemoveSlot(GetSlotID(slotID)) || ExtraSlots.API.RemoveSlot(slotID));
 

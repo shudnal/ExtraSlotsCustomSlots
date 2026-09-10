@@ -1,3 +1,12 @@
+# 1.0.22
+* updated for Valheim 1.0.7 and Extra Slots 1.2.1 (now required)
+* fixed inventory loading hooks for both game load overloads and excluded temporary inventories from backpack and quiver processing
+* fixed custom equipment bypassing rejected equip attempts and restored item types safely after nested calls or exceptions
+* synchronized the variant and quality of custom equipment visuals, including changes that keep the same item prefab
+* preserved unchanged slot registrations during configuration updates and ignored repeated IDs in the slot order
+* matched user-defined equipment to its actual registered slot and refreshed equipment when slot rules change
+* fixed the Rusty Bags quiver option retaining an outdated item filter
+
 # 1.0.21
 * fixed compatibility with both legacy Epic Loot versions and Epic Loot 0.13.0 or later for magic effects in custom slots and Shardstones on custom backpacks
 

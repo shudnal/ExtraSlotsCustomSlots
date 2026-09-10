@@ -1,5 +1,3 @@
-using UnityEngine;
-
 namespace ExtraSlotsCustomSlots
 {
     internal sealed class EquipmentVisualMetadata
@@ -8,8 +6,8 @@ namespace ExtraSlotsCustomSlots
         private readonly int qualityKey;
         private int variant;
         private int quality;
-        private int renderedVariant = -1;
-        private int renderedQuality = -1;
+        private int renderedVariant;
+        private int renderedQuality;
 
         internal EquipmentVisualMetadata(string key)
         {
