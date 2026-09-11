@@ -381,6 +381,73 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
             }
         }
 
+        // A value snapshot keeps durability callbacks/unequips reentrant without allocating
+        // an array or sharing a mutable scratch list with nested equipment queries.
+        private readonly struct EquippedItemsSnapshot
+        {
+            private readonly ItemDrop.ItemData item0;
+            private readonly ItemDrop.ItemData item1;
+            private readonly ItemDrop.ItemData item2;
+            private readonly ItemDrop.ItemData item3;
+            private readonly ItemDrop.ItemData item4;
+            private readonly ItemDrop.ItemData item5;
+            private readonly ItemDrop.ItemData item6;
+            private readonly ItemDrop.ItemData item7;
+
+            internal EquippedItemsSnapshot(Humanoid humanoid)
+            {
+                HumanoidCustomItemSlots data = humanoid.GetCustomItemData();
+                item0 = data.customItem1;
+                item1 = data.customItem2;
+                item2 = data.customItem3;
+                item3 = data.customItem4;
+                item4 = data.customItem5;
+                item5 = data.customItem6;
+                item6 = data.customItem7;
+                item7 = data.customItem8;
+            }
+
+            internal ItemDrop.ItemData this[int index] => index switch
+            {
+                0 => item0,
+                1 => item1,
+                2 => item2,
+                3 => item3,
+                4 => item4,
+                5 => item5,
+                6 => item6,
+                7 => item7,
+                _ => null
+            };
+        }
+
+        private static FieldInfo[] modifierSources = Array.Empty<FieldInfo>();
+        private static AccessTools.FieldRef<ItemDrop.ItemData.SharedData, float>[] modifierReaders =
+            Array.Empty<AccessTools.FieldRef<ItemDrop.ItemData.SharedData, float>>();
+
+        private static AccessTools.FieldRef<ItemDrop.ItemData.SharedData, float>[] GetModifierReaders()
+        {
+            FieldInfo[] fields = Player.s_equipmentModifierSourceFields;
+            if (fields == null)
+                return Array.Empty<AccessTools.FieldRef<ItemDrop.ItemData.SharedData, float>>();
+
+            bool changed = modifierSources.Length != fields.Length;
+            for (int i = 0; !changed && i < fields.Length; i++)
+                changed = modifierSources[i] != fields[i];
+
+            if (!changed)
+                return modifierReaders;
+
+            var readers = new AccessTools.FieldRef<ItemDrop.ItemData.SharedData, float>[fields.Length];
+            for (int i = 0; i < fields.Length; i++)
+                if (fields[i] != null && fields[i].FieldType == typeof(float) && !fields[i].IsStatic)
+                    readers[i] = AccessTools.FieldRefAccess<ItemDrop.ItemData.SharedData, float>(fields[i]);
+
+            modifierSources = (FieldInfo[])fields.Clone();
+            modifierReaders = readers;
+            return modifierReaders;
+        }
+
         public static IEnumerable<ItemDrop.ItemData> GetEquippedItems()
         {
             tempItems.Clear();
@@ -399,8 +466,13 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
             if (item == null)
                 return -1;
 
+            Player player = Player.m_localPlayer;
+            if (!player)
+                return -1;
+
+            EquippedItemsSnapshot equipped = new EquippedItemsSnapshot(player);
             for (int i = 0; i < SlotsAmount; i++)
-                if (GetItem(i) is ItemDrop.ItemData customItem && customItem == item)
+                if (ReferenceEquals(equipped[i], item))
                     return i;
 
             return -1;
@@ -410,6 +482,12 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
 
         public static class CustomItemPatches
         {
+            [HarmonyPatch(typeof(Player), nameof(Player.Awake))]
+            private static class Player_Awake_PrepareModifierReaders
+            {
+                private static void Postfix() => GetModifierReaders();
+            }
+
             [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UpdateEquipmentStatusEffects))]
             private static class Humanoid_UpdateEquipmentStatusEffects_CustomItem
             {
@@ -463,7 +541,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    __result += GetEquippedItems().Sum(item => item.m_shared.m_weight);
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                        if (items[i]?.m_shared != null)
+                            __result += items[i].m_shared.m_weight;
                 }
             }
 
@@ -622,7 +703,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    GetEquippedItemsArray().Do(item => __instance.UnequipItem(item, triggerEquipEffects: false));
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                        if (items[i] != null)
+                            __instance.UnequipItem(items[i], triggerEquipEffects: false);
                 }
             }
 
@@ -668,7 +752,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    __result += GetEquippedItems().Sum(item => item.m_shared.m_eitrRegenModifier);
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                        if (items[i]?.m_shared != null)
+                            __result += items[i].m_shared.m_eitrRegenModifier;
                 }
             }
 
@@ -680,7 +767,13 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    GetEquippedItemsArray().DoIf(item => item.m_shared.m_useDurability, item => __instance.DrainEquipedItemDurability(item, dt));
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                    {
+                        ItemDrop.ItemData item = items[i];
+                        if (item?.m_shared != null && item.m_shared.m_useDurability)
+                            __instance.DrainEquipedItemDurability(item, dt);
+                    }
                 }
             }
 
@@ -692,7 +785,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    GetEquippedItems().Select(item => item.m_shared.m_damageModifiers).Do(mods.Apply);
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                        if (items[i]?.m_shared != null)
+                            mods.Apply(items[i].m_shared.m_damageModifiers);
                 }
             }
 
@@ -707,8 +803,22 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (Player.s_equipmentModifierSourceFields == null)
                         return;
 
-                    for (int i = 0; i < __instance.m_equipmentModifierValues.Length; i++)
-                        GetEquippedItems().Do(item => __instance.m_equipmentModifierValues[i] += (float)Player.s_equipmentModifierSourceFields[i].GetValue(item.m_shared));
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    var readers = GetModifierReaders();
+                    int count = Math.Min(__instance.m_equipmentModifierValues.Length, readers.Length);
+                    for (int i = 0; i < count; i++)
+                    {
+                        var reader = readers[i];
+                        if (reader == null)
+                            continue;
+
+                        for (int j = 0; j < SlotsAmount; j++)
+                        {
+                            ItemDrop.ItemData item = items[j];
+                            if (item?.m_shared != null)
+                                __instance.m_equipmentModifierValues[i] += reader(item.m_shared);
+                        }
+                    }
                 }
             }
 
@@ -759,7 +869,10 @@ namespace ExtraSlotsCustomSlots.UserDefinedCustomSlots
                     if (!IsValidPlayer(__instance))
                         return;
 
-                    __result += GetEquippedItems().Count(item => item.m_shared.m_setName == setName);
+                    EquippedItemsSnapshot items = new EquippedItemsSnapshot(__instance);
+                    for (int i = 0; i < SlotsAmount; i++)
+                        if (items[i]?.m_shared != null && items[i].m_shared.m_setName == setName)
+                            __result++;
                 }
             }
         }

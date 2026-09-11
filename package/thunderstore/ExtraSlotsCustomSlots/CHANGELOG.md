@@ -1,3 +1,8 @@
+# 1.0.23
+* Replaced hot-path reflection and boxed equipment modifier reads with cached field accessors that track source-field changes.
+* Removed per-update equipment arrays and repeated slot lookups while retaining per-call snapshots for nested unequips and durability updates.
+* Fixed custom-slot damage modifiers being applied to a temporary copy instead of the returned modifier structure.
+
 # 1.0.22
 * updated for Valheim 1.0.7 and Extra Slots 1.2.1 (now required)
 * fixed inventory loading hooks for both game load overloads and excluded temporary inventories from backpack and quiver processing
